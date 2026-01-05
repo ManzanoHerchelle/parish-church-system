@@ -112,11 +112,39 @@ HTML;
         $userEmail = $_SESSION['user_email'] ?? '';
         $isAdmin = ($this->userRole === 'admin');
         
+        // Get active logo
+        $activeLogo = null;
+        try {
+            $conn = getDBConnection();
+            $tableCheck = $conn->query("SELECT 1 FROM information_schema.TABLES 
+                WHERE TABLE_SCHEMA='parish_church_system' AND TABLE_NAME='system_logos'");
+            
+            if ($tableCheck && $tableCheck->num_rows > 0) {
+                $logoResult = $conn->query("SELECT file_path, alt_text, name FROM system_logos WHERE is_active = 1 AND is_archived = 0 LIMIT 1");
+                if ($logoResult && $logoResult->num_rows > 0) {
+                    $activeLogo = $logoResult->fetch_assoc();
+                }
+            }
+            closeDBConnection($conn);
+        } catch (Exception $e) {
+            // Logo fetch failed, continue without it
+        }
+        
+        // Prepare logo HTML
+        $logoHTML = '';
+        if ($activeLogo) {
+            $logoHTML = '<img src="/documentSystem/' . htmlspecialchars($activeLogo['file_path']) . '" 
+                        alt="' . htmlspecialchars($activeLogo['alt_text'] ?: $activeLogo['name']) . '" 
+                        style="max-width: 45px; max-height: 45px; object-fit: contain;">';
+        } else {
+            $logoHTML = '<div class="logo-circle">PC</div>';
+        }
+        
         return <<<HTML
 <div class="sidebar">
     <div class="sidebar-header">
         <div class="logo-circles">
-            <div class="logo-circle">PC</div>
+            {$logoHTML}
         </div>
         <div class="system-title">
             Parish Ease: Admin Panel
