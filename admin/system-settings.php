@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $query = "UPDATE booking_types SET name = ?, description = ?, fee = ?, duration_minutes = ?, max_bookings_per_day = ?, is_active = ? WHERE id = ?";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param('ssdiii', $name, $description, $fee, $duration, $max_per_day, $is_active, $id);
+            $stmt->bind_param('ssdiiii', $name, $description, $fee, $duration, $max_per_day, $is_active, $id);
             if ($stmt->execute()) {
                 $statusMessage = 'Booking type updated successfully';
             }
@@ -198,6 +198,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $statusMessage = 'Payment account deleted successfully';
             }
             break;
+
+        // Announcements
+        case 'add_announcement':
+            $title = trim($_POST['title']);
+            $content = trim($_POST['content']);
+            $userId = $_SESSION['user_id'];
+            
+            $query = "INSERT INTO announcements (title, content, created_by) VALUES (?, ?, ?)";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param('ssi', $title, $content, $userId);
+            if ($stmt->execute()) {
+                $statusMessage = 'Announcement added successfully';
+            }
+            break;
+
+        case 'edit_announcement':
+            $id = intval($_POST['id']);
+            $title = trim($_POST['title']);
+            $content = trim($_POST['content']);
+            $is_active = isset($_POST['is_active']) ? 1 : 0;
+            $display_order = intval($_POST['display_order'] ?? 0);
+            
+            $query = "UPDATE announcements SET title = ?, content = ?, is_active = ?, display_order = ? WHERE id = ?";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param('sssii', $title, $content, $is_active, $display_order, $id);
+            if ($stmt->execute()) {
+                $statusMessage = 'Announcement updated successfully';
+            }
+            break;
+
+        case 'delete_announcement':
+            $id = intval($_POST['id']);
+            $query = "DELETE FROM announcements WHERE id = ?";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param('i', $id);
+            if ($stmt->execute()) {
+                $statusMessage = 'Announcement deleted successfully';
+            }
+            break;
     }
 }
 
@@ -221,6 +260,12 @@ $paymentAccounts = $conn->query("SELECT pa.*, pm.name as method_name
                                  FROM payment_accounts pa 
                                  JOIN payment_methods pm ON pa.payment_method_id = pm.id 
                                  ORDER BY pm.sort_order, pa.sort_order")->fetch_all(MYSQLI_ASSOC);
+
+// Fetch announcements
+$announcements = $conn->query("SELECT a.*, CONCAT(u.first_name, ' ', u.last_name) as created_by_name 
+                               FROM announcements a 
+                               LEFT JOIN users u ON a.created_by = u.id 
+                               ORDER BY a.display_order, a.created_at DESC")->fetch_all(MYSQLI_ASSOC);
 
 closeDBConnection($conn);
 
@@ -512,6 +557,62 @@ $paymentAccountsTable .= '<button type="submit" class="btn btn-success">Add Paym
 $paymentAccountsTable .= '</form></div></div></div>';
 
 $content .= card('Payment Accounts (Bank, GCash, PayMaya)', $paymentAccountsTable);
+
+// Announcements Section
+$announcementsTable = '<div class="table-responsive"><table class="table table-hover">';
+$announcementsTable .= '<thead><tr><th>Title</th><th>Order</th><th>Status</th><th>Created By</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+
+if (empty($announcements)) {
+    $announcementsTable .= '<tr><td colspan="6" class="text-center">No announcements yet</td></tr>';
+} else {
+    foreach ($announcements as $ann) {
+        $statusBadge = $ann['is_active'] ? badge('Active', 'success') : badge('Inactive', 'secondary');
+        $announcementsTable .= '<tr>';
+        $announcementsTable .= '<td><strong>' . htmlspecialchars($ann['title']) . '</strong><br><small class="text-muted">' . substr(htmlspecialchars($ann['content']), 0, 100) . '...</small></td>';
+        $announcementsTable .= '<td><span class="badge bg-secondary">' . $ann['display_order'] . '</span></td>';
+        $announcementsTable .= '<td>' . $statusBadge . '</td>';
+        $announcementsTable .= '<td>' . htmlspecialchars($ann['created_by_name']) . '</td>';
+        $announcementsTable .= '<td>' . date('M d, Y', strtotime($ann['created_at'])) . '</td>';
+        $announcementsTable .= '<td><button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editAnnModal' . $ann['id'] . '"><i class="bi bi-pencil"></i> Edit</button> ';
+        $announcementsTable .= '<form method="POST" style="display: inline;"><input type="hidden" name="action" value="delete_announcement"><input type="hidden" name="id" value="' . $ann['id'] . '"><button type="submit" class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this announcement?\')"><i class="bi bi-trash"></i></button></form></td>';
+        $announcementsTable .= '</tr>';
+        
+        // Edit modal
+        $announcementsTable .= '<div class="modal fade" id="editAnnModal' . $ann['id'] . '" tabindex="-1">';
+        $announcementsTable .= '<div class="modal-dialog modal-lg"><div class="modal-content"><form method="POST">';
+        $announcementsTable .= '<div class="modal-header"><h5 class="modal-title">Edit Announcement</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>';
+        $announcementsTable .= '<div class="modal-body">';
+        $announcementsTable .= '<input type="hidden" name="action" value="edit_announcement">';
+        $announcementsTable .= '<input type="hidden" name="id" value="' . $ann['id'] . '">';
+        $announcementsTable .= formGroup('title', 'Title', 'text', $ann['title'], true);
+        $announcementsTable .= formGroup('content', 'Content', 'textarea', $ann['content'], true, ['rows' => '6']);
+        $announcementsTable .= formGroup('display_order', 'Display Order', 'number', $ann['display_order'], false, ['placeholder' => '0']);
+        $announcementsTable .= '<div class="form-check"><input type="checkbox" class="form-check-input" name="is_active" id="is_active_ann' . $ann['id'] . '" ' . ($ann['is_active'] ? 'checked' : '') . '>';
+        $announcementsTable .= '<label class="form-check-label" for="is_active_ann' . $ann['id'] . '">Active</label></div>';
+        $announcementsTable .= '</div>';
+        $announcementsTable .= '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>';
+        $announcementsTable .= '<button type="submit" class="btn btn-primary">Save Changes</button></div>';
+        $announcementsTable .= '</form></div></div></div>';
+    }
+}
+
+$announcementsTable .= '</tbody></table></div>';
+$announcementsTable .= '<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addAnnModal"><i class="bi bi-plus"></i> Add Announcement</button>';
+
+// Add Announcement Modal
+$announcementsTable .= '<div class="modal fade" id="addAnnModal" tabindex="-1">';
+$announcementsTable .= '<div class="modal-dialog modal-lg"><div class="modal-content"><form method="POST">';
+$announcementsTable .= '<div class="modal-header"><h5 class="modal-title">Add Announcement</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>';
+$announcementsTable .= '<div class="modal-body">';
+$announcementsTable .= '<input type="hidden" name="action" value="add_announcement">';
+$announcementsTable .= formGroup('title', 'Title', 'text', '', true, ['placeholder' => 'Announcement title']);
+$announcementsTable .= formGroup('content', 'Content', 'textarea', '', true, ['rows' => '6', 'placeholder' => 'Enter announcement content']);
+$announcementsTable .= '</div>';
+$announcementsTable .= '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>';
+$announcementsTable .= '<button type="submit" class="btn btn-success">Add Announcement</button></div>';
+$announcementsTable .= '</form></div></div></div>';
+
+$content .= card('Announcements (Login Page)', $announcementsTable);
 
 // Create layout and render
 $layout = new AdminLayout('System Settings', 'System Settings', 'gear');

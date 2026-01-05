@@ -1,6 +1,7 @@
 <?php 
 // Login page
 require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../config/database.php';
 startSecureSession();
 
 // Check if already logged in
@@ -9,6 +10,19 @@ if (isLoggedIn()) {
     $redirectUrl = ($role === 'admin' || $role === 'staff') ? '/documentSystem/admin/dashboard.php' : '/documentSystem/client/dashboard.php';
     header('Location: ' . $redirectUrl);
     exit;
+}
+
+// Get announcements
+$announcements = [];
+try {
+    $conn = getDBConnection();
+    $result = $conn->query("SELECT title, content FROM announcements WHERE is_active = 1 ORDER BY display_order, created_at DESC");
+    if ($result) {
+        $announcements = $result->fetch_all(MYSQLI_ASSOC);
+    }
+    closeDBConnection($conn);
+} catch (Exception $e) {
+    // Announcements fetch failed, continue without them
 }
 
 // Get messages
@@ -72,8 +86,19 @@ unset($_SESSION['login_error']);
       <div class="row g-4">
         <div class="col-lg-7">
           <div class="panel-title">Announcements</div>
-          <div class="panel-body" style="min-height: 400px; background: #f5f5f5;">
-            <!-- Announcements will be displayed here -->
+          <div class="panel-body" style="min-height: 400px; background: #f5f5f5; overflow-y: auto;">
+            <?php if (!empty($announcements)): ?>
+              <?php foreach ($announcements as $ann): ?>
+                <div style="padding: 15px; border-bottom: 1px solid #ddd; margin-bottom: 10px;">
+                  <h5 style="margin: 0 0 10px 0; color: #3e5361;"><strong><?php echo htmlspecialchars($ann['title']); ?></strong></h5>
+                  <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #333;">
+                    <?php echo nl2br(htmlspecialchars($ann['content'])); ?>
+                  </p>
+                </div>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <p style="padding: 15px; text-align: center; color: #999;">No announcements at this time.</p>
+            <?php endif; ?>
           </div>
         </div>
 
