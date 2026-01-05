@@ -389,7 +389,7 @@ function getPaymentStatusBadge($status) {
 
             <div class="mb-3">
               <label for="payment_proof" class="form-label">Upload Receipt/Proof <span class="text-danger">*</span></label>
-              <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept=".jpg,.jpeg,.png,.pdf" required>
+              <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept=".jpg,.jpeg,.png,.pdf">
               <small class="text-muted">Accepted formats: JPG, PNG, PDF (Max 5MB)</small>
             </div>
 
@@ -489,11 +489,26 @@ function getPaymentStatusBadge($status) {
   <script src="/documentSystem/assets/js/common.js"></script>
   
   <script>
+    // Payment form submission validation
+    document.getElementById('paymentForm')?.addEventListener('submit', function(e) {
+      const method = document.getElementById('payment_method').value;
+      const proofFile = document.getElementById('payment_proof');
+      
+      // Check if proof is required for this method
+      const requiresProof = ['bank_transfer', 'gcash', 'paymaya'].includes(method);
+      
+      if (requiresProof && !proofFile.value) {
+        e.preventDefault();
+        alert('Please upload a payment proof file for the selected payment method.');
+        return false;
+      }
+    });
+
     // Show payment details based on selected method
     function showPaymentDetails() {
       const method = document.getElementById('payment_method').value;
-      const proofFile = document.getElementById('payment_proof');
-      const transactionRef = document.getElementById('transaction_reference');
+      const transactionRefContainer = document.getElementById('transaction_reference').closest('.mb-3');
+      const paymentProofContainer = document.getElementById('payment_proof').closest('.mb-3');
       
       // Hide all payment details
       document.getElementById('bankDetails').style.display = 'none';
@@ -501,49 +516,50 @@ function getPaymentStatusBadge($status) {
       document.getElementById('paymayaDetails').style.display = 'none';
       document.getElementById('counterDetails').style.display = 'none';
       
-      // Show selected payment details and manage field requirements
-      if (method === 'bank_transfer') {
+      if (!method) return;
+      
+      // Show the appropriate section and populate with account details
+      if (method === 'bank_transfer' && paymentAccountsData['bank_transfer']) {
+        const accounts = paymentAccountsData['bank_transfer'];
+        let html = '';
+        accounts.forEach(acc => {
+          html += `<strong>${acc.account_name}:</strong><br>
+                   <strong>Account Number:</strong> ${acc.account_number}<br>
+                   <strong>Account Holder:</strong> ${acc.account_holder}`;
+          if (acc.branch_name) html += `<br><strong>Branch:</strong> ${acc.branch_name}`;
+          if (acc.instructions) html += `<br><strong>Instructions:</strong> ${acc.instructions}`;
+          html += '<br><br>';
+        });
+        document.getElementById('bankDetailsContent').innerHTML = html;
         document.getElementById('bankDetails').style.display = 'block';
-        proofFile.required = true;
-        proofFile.disabled = false;
-        proofFile.style.backgroundColor = '';
-        transactionRef.required = false;
-        transactionRef.disabled = false;
-        transactionRef.style.backgroundColor = '';
-      } else if (method === 'gcash') {
+        transactionRefContainer.style.display = 'block';
+        paymentProofContainer.style.display = 'block';
+      } else if (method === 'gcash' && paymentAccountsData['gcash']) {
+        const accounts = paymentAccountsData['gcash'];
+        let html = '';
+        accounts.forEach(acc => {
+          html += `<strong>Account Name:</strong> ${acc.account_number}<br>`;
+          if (acc.instructions) html += `<strong>Note:</strong> ${acc.instructions}<br>`;
+        });
+        document.getElementById('gcashDetailsContent').innerHTML = html;
         document.getElementById('gcashDetails').style.display = 'block';
-        proofFile.required = true;
-        proofFile.disabled = false;
-        proofFile.style.backgroundColor = '';
-        transactionRef.required = false;
-        transactionRef.disabled = false;
-        transactionRef.style.backgroundColor = '';
-      } else if (method === 'paymaya') {
+        transactionRefContainer.style.display = 'block';
+        paymentProofContainer.style.display = 'block';
+      } else if (method === 'paymaya' && paymentAccountsData['paymaya']) {
+        const accounts = paymentAccountsData['paymaya'];
+        let html = '';
+        accounts.forEach(acc => {
+          html += `<strong>Account Name:</strong> ${acc.account_number}<br>`;
+          if (acc.instructions) html += `<strong>Note:</strong> ${acc.instructions}<br>`;
+        });
+        document.getElementById('paymayaDetailsContent').innerHTML = html;
         document.getElementById('paymayaDetails').style.display = 'block';
-        proofFile.required = true;
-        proofFile.disabled = false;
-        proofFile.style.backgroundColor = '';
-        transactionRef.required = false;
-        transactionRef.disabled = false;
-        transactionRef.style.backgroundColor = '';
-      } else if (method === 'over_counter') {
+        transactionRefContainer.style.display = 'block';
+        paymentProofContainer.style.display = 'block';
+      } else if (method === 'cash' || method === 'over_counter') {
         document.getElementById('counterDetails').style.display = 'block';
-        proofFile.required = false;
-        proofFile.disabled = true;
-        proofFile.style.backgroundColor = '#f0f0f0';
-        proofFile.value = '';
-        transactionRef.required = false;
-        transactionRef.disabled = true;
-        transactionRef.style.backgroundColor = '#f0f0f0';
-        transactionRef.value = '';
-      } else {
-        // Default: no fields required if no method selected
-        proofFile.required = false;
-        proofFile.disabled = false;
-        proofFile.style.backgroundColor = '';
-        transactionRef.required = false;
-        transactionRef.disabled = false;
-        transactionRef.style.backgroundColor = '';
+        transactionRefContainer.style.display = 'none';
+        paymentProofContainer.style.display = 'none';
       }
     }
 
