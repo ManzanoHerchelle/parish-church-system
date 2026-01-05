@@ -195,6 +195,15 @@ function getPaymentStatusBadge($status) {
     #rescheduleModal {
       z-index: 2000 !important;
     }
+    
+    /* Bootstrap modal z-index fixes */
+    .modal.fade {
+      z-index: 2050 !important;
+    }
+    .modal-backdrop.fade.show {
+      z-index: 2040 !important;
+      opacity: 0.5;
+    }
   </style>
 </head>
 <body>
