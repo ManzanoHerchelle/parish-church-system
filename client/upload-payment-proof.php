@@ -55,12 +55,15 @@ if (!$documentRequest) {
     exit;
 }
 
-// Handle file upload (required only for non-cash methods)
+// Handle file upload (required only for online payment methods)
 $relativeFilePath = null;
 
-if ($paymentMethod !== 'over_counter') {
+// Check if proof is required for this payment method
+$requiresProof = in_array($paymentMethod, ['bank_transfer', 'gcash', 'paymaya']);
+
+if ($requiresProof) {
     if (!isset($_FILES['payment_proof']) || $_FILES['payment_proof']['error'] !== UPLOAD_ERR_OK) {
-        $_SESSION['error_message'] = 'Please upload a valid payment proof file';
+        $_SESSION['error_message'] = 'Please upload a payment proof file for online payment methods';
         header('Location: /documentSystem/client/view-documents.php');
         exit;
     }
