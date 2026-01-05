@@ -12,17 +12,24 @@ if (isLoggedIn()) {
     exit;
 }
 
-// Get announcements
+// Get announcements and active logo
 $announcements = [];
+$activeLogo = null;
 try {
     $conn = getDBConnection();
     $result = $conn->query("SELECT title, content FROM announcements WHERE is_active = 1 ORDER BY display_order, created_at DESC");
     if ($result) {
         $announcements = $result->fetch_all(MYSQLI_ASSOC);
     }
+    
+    // Get active logo
+    $logoResult = $conn->query("SELECT file_path, alt_text, name FROM system_logos WHERE is_active = 1 AND is_archived = 0 LIMIT 1");
+    if ($logoResult) {
+        $activeLogo = $logoResult->fetch_assoc();
+    }
     closeDBConnection($conn);
 } catch (Exception $e) {
-    // Announcements fetch failed, continue without them
+    // Fetch failed, continue without them
 }
 
 // Get messages
@@ -65,7 +72,13 @@ unset($_SESSION['login_error']);
     <div class="container">
       <div class="row align-items-center justify-content-center g-3">
         <div class="col-auto">
-          <div class="logo-circle">LOGO</div>
+          <?php if ($activeLogo): ?>
+            <img src="/documentSystem/<?php echo htmlspecialchars($activeLogo['file_path']); ?>" 
+                 alt="<?php echo htmlspecialchars($activeLogo['alt_text'] ?: $activeLogo['name']); ?>" 
+                 style="max-width: 70px; max-height: 70px; object-fit: contain;">
+          <?php else: ?>
+            <div class="logo-circle">LOGO</div>
+          <?php endif; ?>
         </div>
         <div class="col-auto">
           <div class="header-text">
@@ -75,7 +88,13 @@ unset($_SESSION['login_error']);
           </div>
         </div>
         <div class="col-auto">
-          <div class="logo-circle">LOGO</div>
+          <?php if ($activeLogo): ?>
+            <img src="/documentSystem/<?php echo htmlspecialchars($activeLogo['file_path']); ?>" 
+                 alt="<?php echo htmlspecialchars($activeLogo['alt_text'] ?: $activeLogo['name']); ?>" 
+                 style="max-width: 70px; max-height: 70px; object-fit: contain;">
+          <?php else: ?>
+            <div class="logo-circle">LOGO</div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
