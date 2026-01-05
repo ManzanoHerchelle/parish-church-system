@@ -23,10 +23,18 @@ function setupTabs() {
 
 // Cancel appointment
 function openCancelModal(appointmentId) {
+  console.log('Opening cancel modal for appointment:', appointmentId);
   const modal = document.getElementById('cancelModal');
+  console.log('Modal element found:', modal);
   if (modal) {
     modal.classList.add('active');
-    document.getElementById('cancel_booking_id').value = appointmentId;
+    const inputElement = document.getElementById('cancel_booking_id');
+    console.log('Input element found:', inputElement);
+    if (inputElement) {
+      inputElement.value = appointmentId;
+    }
+  } else {
+    console.error('cancelModal element not found!');
   }
 }
 
