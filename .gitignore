@@ -1,0 +1,41 @@
+# Node modules
+node_modules/
+package-lock.json
+
+# Uploaded files (sensitive data)
+uploads/documents/*
+uploads/payments/*
+uploads/attachments/*
+!uploads/documents/.gitkeep
+!uploads/payments/.gitkeep
+!uploads/attachments/.gitkeep
+
+# Configuration files with sensitive data
+config/email_config.php
+
+# PHPMailer (can be reinstalled)
+includes/PHPMailer-6.9.1/
+
+# Logs
+*.log
+error_log
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+*.tmp
+*.temp
+test_email.php
+
+# Database dumps
+*.sql.backup
+*.sql~
