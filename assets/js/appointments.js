@@ -84,6 +84,99 @@ function rescheduleAppointment(appointmentId) {
   if (modal) {
     modal.classList.add('active');
     document.getElementById('reschedule_booking_id').value = appointmentId;
+    
+    // Fetch booked dates and times
+    fetchBookedSlots(appointmentId);
+  }
+}
+
+// Fetch booked slots from backend
+function fetchBookedSlots(appointmentId) {
+  fetch(`/documentSystem/api/get-booked-slots.php?appointment_id=${appointmentId}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Store booked slots globally for use in date/time validation
+        window.bookedSlots = data.booked_slots || {};
+        window.currentAppointmentId = appointmentId;
+        
+        // Disable booked dates
+        disableBookedDates();
+        
+        // Add event listener for date changes
+        const dateInput = document.getElementById('reschedule_date');
+        if (dateInput) {
+          dateInput.addEventListener('change', function() {
+            disableBookedTimes(this.value);
+          });
+        }
+      }
+    })
+    .catch(error => console.error('Error fetching booked slots:', error));
+}
+
+// Disable booked dates in the date picker
+function disableBookedDates() {
+  const dateInput = document.getElementById('reschedule_date');
+  if (!dateInput) return;
+  
+  // Get all booked dates
+  const bookedDates = Object.keys(window.bookedSlots || {});
+  
+  // Set min date to today
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  dateInput.min = `${year}-${month}-${day}`;
+  
+  // Add change listener to validate and disable times
+  if (!dateInput.hasListener) {
+    dateInput.addEventListener('change', function() {
+      disableBookedTimes(this.value);
+    });
+    dateInput.hasListener = true;
+  }
+}
+
+// Disable booked times for a specific date
+function disableBookedTimes(selectedDate) {
+  const timeInput = document.getElementById('reschedule_time');
+  if (!timeInput) return;
+  
+  // Get booked times for this date
+  const bookedTimes = (window.bookedSlots && window.bookedSlots[selectedDate]) ? 
+    window.bookedSlots[selectedDate] : [];
+  
+  // Remove old data attributes
+  timeInput.removeAttribute('disabled-times');
+  
+  // Store disabled times as data attribute for validation
+  if (bookedTimes.length > 0) {
+    timeInput.setAttribute('disabled-times', JSON.stringify(bookedTimes));
+    
+    // Add event listener for time change to show warning
+    if (!timeInput.hasTimeListener) {
+      timeInput.addEventListener('change', function() {
+        const warning = document.getElementById('bookedTimesWarning');
+        if (bookedTimes.includes(this.value)) {
+          if (warning) warning.style.display = 'block';
+        } else {
+          if (warning) warning.style.display = 'none';
+        }
+      });
+      timeInput.hasTimeListener = true;
+    }
+  } else {
+    // Hide warning if no times are booked
+    const warning = document.getElementById('bookedTimesWarning');
+    if (warning) warning.style.display = 'none';
+  }
+  
+  // Clear current time selection if it's booked
+  if (timeInput.value && bookedTimes.includes(timeInput.value)) {
+    timeInput.value = '';
+    showAlert('Selected time is already booked. Please choose another time.', 'warning');
   }
 }
 
@@ -97,6 +190,16 @@ function submitReschedule() {
   if (!appointmentId || !newDate || !newTime) {
     showAlert('Please fill in all required fields', 'danger');
     return;
+  }
+
+  // Validate that the selected time is not booked
+  const disabledTimes = document.getElementById('reschedule_time').getAttribute('disabled-times');
+  if (disabledTimes) {
+    const bookedTimes = JSON.parse(disabledTimes);
+    if (bookedTimes.includes(newTime)) {
+      showAlert('This time is already booked. Please select a different time.', 'danger');
+      return;
+    }
   }
 
   const formData = new FormData();

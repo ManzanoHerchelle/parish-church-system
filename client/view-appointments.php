@@ -447,10 +447,13 @@ function getPaymentStatusBadge($status) {
         <div class="form-group">
           <label class="form-label">New Date <span class="text-danger">*</span></label>
           <input type="date" id="reschedule_date" class="form-control" required>
+          <small style="color: #666; margin-top: 5px; display: block;">Booked dates will be automatically disabled</small>
         </div>
         <div class="form-group">
           <label class="form-label">New Time <span class="text-danger">*</span></label>
           <input type="time" id="reschedule_time" class="form-control" required>
+          <small id="bookedTimesWarning" style="color: #dc3545; margin-top: 5px; display: none; font-weight: bold;">❌ This time is already booked. Please choose another.</small>
+          <small style="color: #666; margin-top: 5px; display: block;">Booked times for the selected date will be unavailable</small>
         </div>
         <div class="form-group">
           <label class="form-label">Reason for Rescheduling (Optional)</label>
