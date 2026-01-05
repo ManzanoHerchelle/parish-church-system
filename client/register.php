@@ -74,7 +74,7 @@ unset($_SESSION['registration_error'], $_SESSION['registration_data']);
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
         <?php endif; ?>
-        <form method="POST" action="../api/register.php" id="registrationForm">
+        <form method="POST" action="/documentSystem/api/register.php" id="registrationForm">
           <div class="section-label">Log In Credentials</div>
           <div class="form-row">
             <label>Email:</label>

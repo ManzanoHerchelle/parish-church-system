@@ -95,7 +95,7 @@ unset($_SESSION['login_error']);
             <div class="paalala-box">
               <strong>PAALALA:</strong> Ang buscopan Venus ay hindi gamot at hindi dapat gamiting pang-gamot sa anumang uri ng sakit.
             </div>
-            <form method="POST" action="../api/login.php">
+            <form method="POST" action="/documentSystem/api/login.php">
               <div class="form-row">
                 <label>Email:</label>
                 <div class="input-group flex-grow-1">
