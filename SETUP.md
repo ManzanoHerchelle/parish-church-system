@@ -186,9 +186,28 @@ If successful, you should receive an email.
 
 ```
 parish-church-system/
-├── admin/                  # Admin panel (to be built)
-├── client/                 # Client pages (to be built)
-├── api/                    # API endpoints (to be built)
+├── admin/                  # Admin panel (complete)
+│   ├── dashboard.php       # Admin overview
+│   ├── manage-users.php    # User management
+│   ├── manage-staff.php    # Staff management
+│   ├── manage-payments.php # Payment verification
+│   ├── manage-logos.php    # Logo management
+│   ├── manage-documents.php # Document type management
+│   ├── manage-appointments.php # Appointment management
+│   ├── reports.php         # Analytics & reports
+│   └── system-settings.php # System configuration
+├── client/                 # Client pages (complete)
+│   ├── login.php           # Client login/registration
+│   ├── dashboard.php       # Client home
+│   ├── view-documents.php  # View document requests
+│   ├── view-appointments.php # View bookings
+│   ├── new-appointment.php # Book appointment
+│   ├── request-documents.php # Request documents
+│   └── change-password.php # Password management
+├── api/                    # API endpoints
+│   ├── login.php
+│   ├── logout.php
+│   └── register.php
 ├── handlers/               # Backend logic
 │   └── email_handler.php   # Email sending functions
 ├── config/
@@ -196,15 +215,23 @@ parish-church-system/
 │   ├── email_config.php    # Your email settings (create this)
 │   └── email_config.example.php  # Template
 ├── includes/               # Shared components
+│   ├── session.php         # Session management
+│   ├── csrf.php            # CSRF protection
+│   ├── client_nav_helper.php # Notification badge calculations
 │   └── PHPMailer-6.9.1/    # Email library (install this)
 ├── assets/
 │   ├── css/                # Stylesheets
 │   ├── js/                 # JavaScript files
 │   └── images/             # Images
+├── src/                    # Application classes
+│   ├── Services/           # Business logic
+│   ├── UI/                 # UI components and layouts
+│   └── Classes/            # Utility classes
 ├── uploads/                # User uploads
 │   ├── documents/          # Processed documents
 │   ├── payments/           # Payment proofs
-│   └── attachments/        # Request attachments
+│   ├── attachments/        # Request attachments
+│   └── logos/              # System logos
 ├── node_modules/           # Bootstrap (npm install)
 ├── database_schema.sql     # Database structure
 ├── package.json            # npm dependencies
@@ -322,6 +349,81 @@ These are in `.gitignore` and should NEVER be pushed:
 - `node_modules/` (too large, reinstall via npm)
 - `uploads/*` (user data, sensitive)
 - `includes/PHPMailer-6.9.1/` (reinstall manually)
+
+---
+
+## Additional Features
+
+### Logo Management
+
+The system includes a logo management system where admins can:
+- Upload a custom logo for the parish
+- Set which logo is active (displayed across all pages)
+- Archive or restore old logos
+- Delete logos
+
+**To manage logos:**
+1. Login as admin
+2. Go to **Admin Panel → Manage Logos**
+3. Upload your parish logo
+4. Click **Set Active** to display it across all sidebars
+
+### Notification Badges
+
+All client pages display notification badges showing:
+- **Pending Documents:** Count of document requests waiting for processing
+- **Pending Appointments:** Count of appointments pending approval
+
+These badges appear in the sidebar navigation on all client pages and update automatically.
+
+### Payment System
+
+The system includes:
+- Multiple payment methods (Cash, GCash, Bank Transfer, Check)
+- Payment verification by admin
+- Payment history and receipts
+- Transaction tracking
+
+### Email Notifications
+
+The system automatically sends emails for:
+- Account registration and email verification
+- Document request confirmations
+- Appointment booking confirmations
+- Document ready for pickup notifications
+- Payment receipts
+- Password reset requests
+
+---
+
+## Next Steps After Setup
+
+1. **Change Admin Password**
+   - Login with default credentials (admin@parishchurch.com / admin123)
+   - Go to settings to change password
+
+2. **Upload Logo**
+   - Go to Manage Logos
+   - Upload parish logo
+   - Set as active
+
+3. **Configure Booking Types**
+   - Manage which services can be booked
+   - Set pricing for each service
+
+4. **Configure Document Types**
+   - Manage which documents can be requested
+   - Set fees for each document type
+
+5. **Set Up Blocked Dates**
+   - Mark holidays or closed days
+   - Prevent bookings on those dates
+
+6. **Test Workflows**
+   - Create a test client account
+   - Request a document
+   - Book an appointment
+   - Test payment verification
 
 ---
 
