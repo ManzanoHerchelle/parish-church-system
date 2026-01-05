@@ -708,6 +708,9 @@ function getPaymentStatusBadge($status) {
     // Function to populate payment account details
     function showPaymentDetails() {
       const method = document.getElementById('payment_method').value;
+      const transactionRefField = document.getElementById('transaction_reference');
+      const paymentProofField = document.getElementById('payment_proof');
+      const paymentProofLabel = paymentProofField.closest('.mb-3').querySelector('.form-label');
       
       // Hide all detail sections
       document.getElementById('bankDetails').style.display = 'none';
@@ -715,7 +718,28 @@ function getPaymentStatusBadge($status) {
       document.getElementById('paymayaDetails').style.display = 'none';
       document.getElementById('counterDetails').style.display = 'none';
       
-      if (!method) return;
+      if (!method) {
+        // Reset to required when no method selected
+        transactionRefField.required = false;
+        paymentProofField.required = true;
+        return;
+      }
+      
+      // For cash/over_counter payments, don't require reference number or proof
+      if (method === 'over_counter' || method === 'cash') {
+        document.getElementById('counterDetails').style.display = 'block';
+        transactionRefField.required = false;
+        transactionRefField.parentElement.style.display = 'none';
+        paymentProofField.required = false;
+        paymentProofField.parentElement.parentElement.style.display = 'none';
+        return;
+      }
+      
+      // For online payments, require reference and proof
+      transactionRefField.required = true;
+      transactionRefField.parentElement.style.display = 'block';
+      paymentProofField.required = true;
+      paymentProofField.parentElement.parentElement.style.display = 'block';
       
       // Show the appropriate section and populate with account details
       if (method === 'bank_transfer' && paymentAccountsData['bank_transfer']) {
@@ -749,10 +773,6 @@ function getPaymentStatusBadge($status) {
         });
         document.getElementById('paymayaDetailsContent').innerHTML = html;
         document.getElementById('paymayaDetails').style.display = 'block';
-      } else if (method === 'over_counter') {
-        document.getElementById('counterDetails').style.display = 'block';
-      } else if (method === 'cash') {
-        document.getElementById('counterDetails').style.display = 'block';
       }
     }
   </script>
