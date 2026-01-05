@@ -22,10 +22,15 @@ try {
         $announcements = $result->fetch_all(MYSQLI_ASSOC);
     }
     
-    // Get active logo
-    $logoResult = $conn->query("SELECT file_path, alt_text, name FROM system_logos WHERE is_active = 1 AND is_archived = 0 LIMIT 1");
-    if ($logoResult) {
-        $activeLogo = $logoResult->fetch_assoc();
+    // Get active logo - check if table exists first
+    $tableCheck = $conn->query("SELECT 1 FROM information_schema.TABLES 
+        WHERE TABLE_SCHEMA='parish_church_system' AND TABLE_NAME='system_logos'");
+    
+    if ($tableCheck && $tableCheck->num_rows > 0) {
+        $logoResult = $conn->query("SELECT file_path, alt_text, name FROM system_logos WHERE is_active = 1 AND is_archived = 0 LIMIT 1");
+        if ($logoResult && $logoResult->num_rows > 0) {
+            $activeLogo = $logoResult->fetch_assoc();
+        }
     }
     closeDBConnection($conn);
 } catch (Exception $e) {
