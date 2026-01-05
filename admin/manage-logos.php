@@ -358,10 +358,10 @@ if (empty($logos)) {
                 <div class="btn-group btn-group-sm" role="group">';
         
         // Edit button
-        $content .= '<button type="button" class="btn btn-info" data-bs-toggle="modal" 
+        $content .= '<button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" 
                         data-bs-target="#editModal" 
                         onclick="loadEditForm(' . $logo['id'] . ', \'' . htmlspecialchars($logo['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($logo['alt_text'], ENT_QUOTES) . '\', \'' . htmlspecialchars($logo['description'], ENT_QUOTES) . '\')">
-                    <i class="fas fa-edit"></i>
+                    <i class="bi bi-pencil"></i>
                 </button>';
         
         if (!$logo['is_archived']) {
@@ -369,8 +369,8 @@ if (empty($logos)) {
                 $content .= '<form method="POST" style="display: inline;">
                     <input type="hidden" name="action" value="set_active_logo">
                     <input type="hidden" name="logo_id" value="' . $logo['id'] . '">
-                    <button type="submit" class="btn btn-success" title="Set as Active">
-                        <i class="fas fa-check"></i>
+                    <button type="submit" class="btn btn-success btn-sm" title="Set as Active">
+                        <i class="bi bi-check-circle"></i>
                     </button>
                 </form>';
             }
@@ -378,16 +378,16 @@ if (empty($logos)) {
             $content .= '<form method="POST" style="display: inline;" onsubmit="return confirm(\'Archive this logo?\');">
                 <input type="hidden" name="action" value="archive_logo">
                 <input type="hidden" name="logo_id" value="' . $logo['id'] . '">
-                <button type="submit" class="btn btn-warning" title="Archive">
-                    <i class="fas fa-archive"></i>
+                <button type="submit" class="btn btn-warning btn-sm" title="Archive">
+                    <i class="bi bi-archive"></i>
                 </button>
             </form>';
         } else {
             $content .= '<form method="POST" style="display: inline;">
                 <input type="hidden" name="action" value="restore_logo">
                 <input type="hidden" name="logo_id" value="' . $logo['id'] . '">
-                <button type="submit" class="btn btn-info" title="Restore">
-                    <i class="fas fa-undo"></i>
+                <button type="submit" class="btn btn-info btn-sm" title="Restore">
+                    <i class="bi bi-arrow-counterclockwise"></i>
                 </button>
             </form>';
         }
@@ -395,8 +395,8 @@ if (empty($logos)) {
         $content .= '<form method="POST" style="display: inline;" onsubmit="return confirm(\'Delete this logo permanently?\');">
             <input type="hidden" name="action" value="delete_logo">
             <input type="hidden" name="logo_id" value="' . $logo['id'] . '">
-            <button type="submit" class="btn btn-danger" title="Delete">
-                <i class="fas fa-trash"></i>
+            <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                <i class="bi bi-trash"></i>
             </button>
         </form>
                 </div>
