@@ -142,6 +142,22 @@ $userInitials = strtoupper(
     substr($nameParts[0], 0, 1) . 
     (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : substr($nameParts[0], 1, 1))
 );
+
+// Get active logo
+$activeLogo = null;
+try {
+    $tableCheck = $conn->query("SELECT 1 FROM information_schema.TABLES 
+        WHERE TABLE_SCHEMA='parish_church_system' AND TABLE_NAME='system_logos'");
+    
+    if ($tableCheck && $tableCheck->num_rows > 0) {
+        $logoResult = $conn->query("SELECT file_path, alt_text, name FROM system_logos WHERE is_active = 1 AND is_archived = 0 LIMIT 1");
+        if ($logoResult && $logoResult->num_rows > 0) {
+            $activeLogo = $logoResult->fetch_assoc();
+        }
+    }
+} catch (Exception $e) {
+    // Logo fetch failed, continue without it
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -188,7 +204,13 @@ $userInitials = strtoupper(
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="logo-circles">
-        <div class="logo-circle">PC</div>
+        <?php if ($activeLogo): ?>
+          <img src="/documentSystem/<?php echo htmlspecialchars($activeLogo['file_path']); ?>" 
+               alt="<?php echo htmlspecialchars($activeLogo['alt_text'] ?: $activeLogo['name']); ?>" 
+               style="max-width: 45px; max-height: 45px; object-fit: contain;">
+        <?php else: ?>
+          <div class="logo-circle">PC</div>
+        <?php endif; ?>
       </div>
       <div class="system-title">
         Parish Ease: An Interactive<br>
