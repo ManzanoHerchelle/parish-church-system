@@ -22,18 +22,18 @@ function setupTabs() {
 }
 
 // Cancel appointment
-function cancelAppointment(appointmentId) {
+function openCancelModal(appointmentId) {
   const modal = document.getElementById('cancelModal');
   if (modal) {
     modal.classList.add('active');
-    document.getElementById('cancelAppointmentId').value = appointmentId;
+    document.getElementById('cancel_booking_id').value = appointmentId;
   }
 }
 
 // Submit cancellation
 function submitCancellation() {
-  const appointmentId = document.getElementById('cancelAppointmentId').value;
-  const reason = document.getElementById('cancellationReason').value;
+  const appointmentId = document.getElementById('cancel_booking_id').value;
+  const reason = document.getElementById('cancellationReason')?.value || '';
 
   if (!appointmentId) {
     showAlert('Invalid appointment', 'danger');
@@ -66,13 +66,64 @@ function closeCancelModal() {
   const modal = document.getElementById('cancelModal');
   if (modal) {
     modal.classList.remove('active');
-    document.getElementById('cancellationReason').value = '';
+    document.getElementById('cancel_booking_id').value = '';
   }
 }
 
-// Reschedule appointment (placeholder for future implementation)
+// Reschedule appointment
 function rescheduleAppointment(appointmentId) {
-  showAlert('Rescheduling feature coming soon', 'info');
+  const modal = document.getElementById('rescheduleModal');
+  if (modal) {
+    modal.classList.add('active');
+    document.getElementById('reschedule_booking_id').value = appointmentId;
+  }
+}
+
+// Submit reschedule
+function submitReschedule() {
+  const appointmentId = document.getElementById('reschedule_booking_id').value;
+  const newDate = document.getElementById('reschedule_date').value;
+  const newTime = document.getElementById('reschedule_time').value;
+  const reason = document.getElementById('reschedule_reason')?.value || '';
+
+  if (!appointmentId || !newDate || !newTime) {
+    showAlert('Please fill in all required fields', 'danger');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('appointment_id', appointmentId);
+  formData.append('new_date', newDate);
+  formData.append('new_time', newTime);
+  formData.append('reason', reason);
+  formData.append('action', 'reschedule_appointment');
+
+  fetch(window.location.pathname, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.text())
+  .then(data => {
+    showAlert('Appointment rescheduled successfully', 'success');
+    closeRescheduleModal();
+    setTimeout(() => window.location.reload(), 1500);
+  })
+  .catch(error => {
+    showAlert('Error rescheduling appointment', 'danger');
+    console.error('Error:', error);
+  });
+}
+
+// Close reschedule modal
+function closeRescheduleModal() {
+  const modal = document.getElementById('rescheduleModal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.getElementById('reschedule_booking_id').value = '';
+    document.getElementById('reschedule_date').value = '';
+    document.getElementById('reschedule_time').value = '';
+    document.getElementById('reschedule_reason').value = '';
+  }
 }
 
 // View appointment details (placeholder for future implementation)

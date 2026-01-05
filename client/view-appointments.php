@@ -57,6 +57,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } else {
             $errorMsg = 'Booking not found.';
         }
+    } elseif ($action === 'reschedule_appointment' && isset($_POST['appointment_id'])) {
+        $appointmentId = $_POST['appointment_id'];
+        $newDate = $_POST['new_date'] ?? null;
+        $newTime = $_POST['new_time'] ?? null;
+        $rescheduleReason = $_POST['reason'] ?? '';
+        
+        if (!$newDate || !$newTime) {
+            $errorMsg = 'Please provide both date and time.';
+        } else {
+            // Verify booking belongs to user and is approved
+            $verifyQuery = "SELECT status FROM bookings WHERE id = ? AND user_id = ?";
+            $verifyStmt = $conn->prepare($verifyQuery);
+            $verifyStmt->bind_param("ii", $appointmentId, $userId);
+            $verifyStmt->execute();
+            $booking = $verifyStmt->get_result()->fetch_assoc();
+            $verifyStmt->close();
+            
+            if ($booking && $booking['status'] === 'approved') {
+                // Check if the new date/time slot is available
+                $checkQuery = "SELECT COUNT(*) as count FROM bookings WHERE booking_date = ? AND booking_time = ? AND status IN ('approved', 'pending')";
+                $checkStmt = $conn->prepare($checkQuery);
+                $checkStmt->bind_param("ss", $newDate, $newTime);
+                $checkStmt->execute();
+                $slotCheck = $checkStmt->get_result()->fetch_assoc();
+                $checkStmt->close();
+                
+                if ($slotCheck['count'] > 0) {
+                    $errorMsg = 'This time slot is not available. Please choose another.';
+                } else {
+                    // Update the booking with new date and time
+                    $updateQuery = "UPDATE bookings SET booking_date = ?, booking_time = ?, rescheduled_at = NOW(), reschedule_reason = ? WHERE id = ?";
+                    $updateStmt = $conn->prepare($updateQuery);
+                    $updateStmt->bind_param("sssi", $newDate, $newTime, $rescheduleReason, $appointmentId);
+                    
+                    if ($updateStmt->execute()) {
+                        $successMsg = 'Booking rescheduled successfully.';
+                        $updateStmt->close();
+                    } else {
+                        $errorMsg = 'Error rescheduling booking. Please try again.';
+                    }
+                }
+            } else {
+                $errorMsg = 'Only approved bookings can be rescheduled.';
+            }
+        }
     }
 }
 
@@ -298,7 +343,7 @@ function getPaymentStatusBadge($status) {
                       <i class="bi bi-x-circle"></i> Cancel Booking
                     </button>
                     <?php if ($booking['status'] === 'approved'): ?>
-                      <button class="btn-small btn-reschedule" onclick="alert('Reschedule feature coming soon. Please contact the parish office.')">
+                      <button class="btn-small btn-reschedule" onclick="rescheduleAppointment(<?php echo $booking['id']; ?>)">
                         <i class="bi bi-arrow-repeat"></i> Reschedule
                       </button>
                     <?php endif; ?>
@@ -395,6 +440,32 @@ function getPaymentStatusBadge($status) {
           <button type="submit" class="btn-primary">Cancel Booking</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Reschedule Modal -->
+  <div id="rescheduleModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">Reschedule Booking</div>
+      <div style="padding: 20px;">
+        <input type="hidden" id="reschedule_booking_id">
+        <div class="form-group">
+          <label class="form-label">New Date <span class="text-danger">*</span></label>
+          <input type="date" id="reschedule_date" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Time <span class="text-danger">*</span></label>
+          <input type="time" id="reschedule_time" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reason for Rescheduling (Optional)</label>
+          <textarea id="reschedule_reason" class="form-control" rows="3" placeholder="Please tell us why you're rescheduling..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeRescheduleModal()">Cancel</button>
+        <button type="button" class="btn-primary" onclick="submitReschedule()">Reschedule Booking</button>
+      </div>
     </div>
   </div>
 
