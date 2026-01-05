@@ -6,9 +6,10 @@
 require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../handlers/email_handler.php';
-require_once __DIR__ . '/../includes/client_nav_helper.php';
 
 startSecureSession();
+
+require_once __DIR__ . '/../includes/client_nav_helper.php';
 
 if (!isLoggedIn()) {
     header('Location: /documentSystem/client/login.php');
@@ -214,8 +215,8 @@ $blockedDatesList = array_map(function($d) { return $d['blocked_date']; }, $bloc
         <a href="/documentSystem/client/view-documents.php" class="nav-link">
           <i class="bi bi-file-earmark-check"></i>
           <span>View Documents</span>
-          <?php if ($navStats['pending_documents'] > 0): ?>
-            <span class="nav-badge"><?php echo $navStats['pending_documents']; ?></span>
+          <?php if (isset($stats) && $stats['pending_documents'] > 0): ?>
+            <span class="nav-badge"><?php echo $stats['pending_documents']; ?></span>
           <?php endif; ?>
         </a>
       </li>
@@ -223,8 +224,8 @@ $blockedDatesList = array_map(function($d) { return $d['blocked_date']; }, $bloc
         <a href="/documentSystem/client/view-appointments.php" class="nav-link">
           <i class="bi bi-calendar-check"></i>
           <span>View Appointments</span>
-          <?php if ($navStats['pending_appointments'] > 0): ?>
-            <span class="nav-badge"><?php echo $navStats['pending_appointments']; ?></span>
+          <?php if (isset($stats) && $stats['pending_appointments'] > 0): ?>
+            <span class="nav-badge"><?php echo $stats['pending_appointments']; ?></span>
           <?php endif; ?>
         </a>
       </li>
