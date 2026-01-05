@@ -86,7 +86,7 @@ class PaymentService {
         
         $payments = [];
         while ($row = $result->fetch_assoc()) {
-            $payments[] = new Payment($row);
+            $payments[] = $row; // return associative arrays for UI components
         }
         
         return $payments;
@@ -114,7 +114,7 @@ class PaymentService {
             return null;
         }
         
-        return new Payment($result->fetch_assoc());
+        return $result->fetch_assoc();
     }
     
     /**
@@ -177,14 +177,14 @@ class PaymentService {
         $payment = $this->getPaymentById($paymentId);
         if (!$payment) return false;
         
-        if ($payment->referenceType === 'document_request') {
+        if ($payment['reference_type'] === 'document_request') {
             $query = "UPDATE document_requests SET payment_status = ? WHERE id = ?";
         } else {
             $query = "UPDATE bookings SET payment_status = ? WHERE id = ?";
         }
         
         $stmt = $this->conn->prepare($query);
-        $stmt->bind_param('si', $status, $payment->referenceId);
+        $stmt->bind_param('si', $status, $payment['reference_id']);
         return $stmt->execute();
     }
     

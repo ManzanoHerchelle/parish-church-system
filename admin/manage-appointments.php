@@ -37,6 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($bookingId > 0) {
         switch ($action) {
             case 'approve':
+                // Fetch booking to check payment status
+                $bookingStmt = $conn->prepare("SELECT payment_status FROM bookings WHERE id = ?");
+                $bookingStmt->bind_param("i", $bookingId);
+                $bookingStmt->execute();
+                $bookingResult = $bookingStmt->get_result()->fetch_assoc();
+                $bookingStmt->close();
+                
+                if ($bookingResult && $bookingResult['payment_status'] === 'unpaid') {
+                    header('Location: /documentSystem/admin/manage-appointments.php?alert=error&message=Cannot+approve+unpaid+appointments');
+                    exit;
+                }
+                
                 $bookingService->approveBooking($bookingId, $userId);
                 header('Location: /documentSystem/admin/manage-appointments.php?alert=success&message=Appointment+approved');
                 exit;

@@ -113,6 +113,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $statusMessage = 'Blocked date removed successfully';
             }
             break;
+
+        // Payment Methods
+        case 'add_payment_method':
+            $name = trim($_POST['name']);
+            $code = trim($_POST['code']);
+            $display_name = trim($_POST['display_name']);
+            $description = trim($_POST['description']);
+            $requires_account = isset($_POST['requires_account']) ? 1 : 0;
+            
+            $query = "INSERT INTO payment_methods (name, code, display_name, description, requires_account_info) VALUES (?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param('ssssi', $name, $code, $display_name, $description, $requires_account);
+            if ($stmt->execute()) {
+                $statusMessage = 'Payment method added successfully';
+            }
+            break;
+
+        case 'edit_payment_method':
+            $id = intval($_POST['id']);
+            $name = trim($_POST['name']);
+            $display_name = trim($_POST['display_name']);
+            $description = trim($_POST['description']);
+            $is_active = isset($_POST['is_active']) ? 1 : 0;
+            
+            $query = "UPDATE payment_methods SET name = ?, display_name = ?, description = ?, is_active = ? WHERE id = ?";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param('sssii', $name, $display_name, $description, $is_active, $id);
+            if ($stmt->execute()) {
+                $statusMessage = 'Payment method updated successfully';
+            }
+            break;
+
+        case 'delete_payment_method':
+            $id = intval($_POST['id']);
+            $query = "DELETE FROM payment_methods WHERE id = ?";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param('i', $id);
+            if ($stmt->execute()) {
+                $statusMessage = 'Payment method deleted successfully';
+            }
+            break;
+
+        // Payment Accounts
+        case 'add_payment_account':
+            $payment_method_id = intval($_POST['payment_method_id']);
+            $account_name = trim($_POST['account_name']);
+            $account_number = trim($_POST['account_number']);
+            $account_holder = trim($_POST['account_holder']);
+            $branch_name = trim($_POST['branch_name']);
+            $instructions = trim($_POST['instructions']);
+            
+            $query = "INSERT INTO payment_accounts (payment_method_id, account_name, account_number, account_holder, branch_name, instructions) VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param('isssss', $payment_method_id, $account_name, $account_number, $account_holder, $branch_name, $instructions);
+            if ($stmt->execute()) {
+                $statusMessage = 'Payment account added successfully';
+            }
+            break;
+
+        case 'edit_payment_account':
+            $id = intval($_POST['id']);
+            $account_name = trim($_POST['account_name']);
+            $account_number = trim($_POST['account_number']);
+            $account_holder = trim($_POST['account_holder']);
+            $branch_name = trim($_POST['branch_name']);
+            $instructions = trim($_POST['instructions']);
+            $is_active = isset($_POST['is_active']) ? 1 : 0;
+            
+            $query = "UPDATE payment_accounts SET account_name = ?, account_number = ?, account_holder = ?, branch_name = ?, instructions = ?, is_active = ? WHERE id = ?";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param('ssssii', $account_name, $account_number, $account_holder, $branch_name, $instructions, $is_active, $id);
+            if ($stmt->execute()) {
+                $statusMessage = 'Payment account updated successfully';
+            }
+            break;
+
+        case 'delete_payment_account':
+            $id = intval($_POST['id']);
+            $query = "DELETE FROM payment_accounts WHERE id = ?";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param('i', $id);
+            if ($stmt->execute()) {
+                $statusMessage = 'Payment account deleted successfully';
+            }
+            break;
     }
 }
 
@@ -127,6 +212,15 @@ $blockedDates = $conn->query("SELECT bd.*, CONCAT(u.first_name, ' ', u.last_name
                                FROM blocked_dates bd 
                                LEFT JOIN users u ON bd.created_by = u.id 
                                ORDER BY bd.date DESC")->fetch_all(MYSQLI_ASSOC);
+
+// Fetch payment methods
+$paymentMethods = $conn->query("SELECT * FROM payment_methods ORDER BY sort_order, name")->fetch_all(MYSQLI_ASSOC);
+
+// Fetch payment accounts
+$paymentAccounts = $conn->query("SELECT pa.*, pm.name as method_name 
+                                 FROM payment_accounts pa 
+                                 JOIN payment_methods pm ON pa.payment_method_id = pm.id 
+                                 ORDER BY pm.sort_order, pa.sort_order")->fetch_all(MYSQLI_ASSOC);
 
 closeDBConnection($conn);
 
@@ -288,6 +382,136 @@ $blockedDatesTable .= '<button type="submit" class="btn btn-success">Add Blocked
 $blockedDatesTable .= '</form></div></div></div>';
 
 $content .= card('Blocked Dates (Holidays & Special Events)', $blockedDatesTable);
+
+// Payment Methods Section
+$paymentMethodsTable = '<div class="table-responsive"><table class="table table-hover">';
+$paymentMethodsTable .= '<thead><tr><th>Name</th><th>Code</th><th>Requires Account</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+
+if (empty($paymentMethods)) {
+    $paymentMethodsTable .= '<tr><td colspan="5" class="text-center">No payment methods configured</td></tr>';
+} else {
+    foreach ($paymentMethods as $pm) {
+        $statusBadge = $pm['is_active'] ? badge('Active', 'success') : badge('Inactive', 'secondary');
+        $requiresBadge = $pm['requires_account_info'] ? badge('Yes', 'info') : badge('No', 'secondary');
+        $paymentMethodsTable .= '<tr>';
+        $paymentMethodsTable .= '<td><strong>' . htmlspecialchars($pm['display_name']) . '</strong><br><small class="text-muted">' . htmlspecialchars($pm['description']) . '</small></td>';
+        $paymentMethodsTable .= '<td><code>' . htmlspecialchars($pm['code']) . '</code></td>';
+        $paymentMethodsTable .= '<td>' . $requiresBadge . '</td>';
+        $paymentMethodsTable .= '<td>' . $statusBadge . '</td>';
+        $paymentMethodsTable .= '<td><button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editPayMethodModal' . $pm['id'] . '"><i class="bi bi-pencil"></i> Edit</button> ';
+        $paymentMethodsTable .= '<form method="POST" style="display: inline;"><input type="hidden" name="action" value="delete_payment_method"><input type="hidden" name="id" value="' . $pm['id'] . '"><button type="submit" class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this payment method?\')"><i class="bi bi-trash"></i></button></form></td>';
+        $paymentMethodsTable .= '</tr>';
+        
+        // Edit modal
+        $paymentMethodsTable .= '<div class="modal fade" id="editPayMethodModal' . $pm['id'] . '" tabindex="-1">';
+        $paymentMethodsTable .= '<div class="modal-dialog"><div class="modal-content"><form method="POST">';
+        $paymentMethodsTable .= '<div class="modal-header"><h5 class="modal-title">Edit Payment Method</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>';
+        $paymentMethodsTable .= '<div class="modal-body">';
+        $paymentMethodsTable .= '<input type="hidden" name="action" value="edit_payment_method">';
+        $paymentMethodsTable .= '<input type="hidden" name="id" value="' . $pm['id'] . '">';
+        $paymentMethodsTable .= formGroup('name', 'Name', 'text', $pm['name'], true);
+        $paymentMethodsTable .= formGroup('display_name', 'Display Name', 'text', $pm['display_name'], true);
+        $paymentMethodsTable .= formGroup('description', 'Description', 'textarea', $pm['description'], false);
+        $paymentMethodsTable .= '<div class="form-check"><input type="checkbox" class="form-check-input" name="is_active" id="is_active_pm' . $pm['id'] . '" ' . ($pm['is_active'] ? 'checked' : '') . '>';
+        $paymentMethodsTable .= '<label class="form-check-label" for="is_active_pm' . $pm['id'] . '">Active</label></div>';
+        $paymentMethodsTable .= '</div>';
+        $paymentMethodsTable .= '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>';
+        $paymentMethodsTable .= '<button type="submit" class="btn btn-primary">Save Changes</button></div>';
+        $paymentMethodsTable .= '</form></div></div></div>';
+    }
+}
+
+$paymentMethodsTable .= '</tbody></table></div>';
+$paymentMethodsTable .= '<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addPayMethodModal"><i class="bi bi-plus"></i> Add Payment Method</button>';
+
+// Add Payment Method Modal
+$paymentMethodsTable .= '<div class="modal fade" id="addPayMethodModal" tabindex="-1">';
+$paymentMethodsTable .= '<div class="modal-dialog"><div class="modal-content"><form method="POST">';
+$paymentMethodsTable .= '<div class="modal-header"><h5 class="modal-title">Add Payment Method</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>';
+$paymentMethodsTable .= '<div class="modal-body">';
+$paymentMethodsTable .= '<input type="hidden" name="action" value="add_payment_method">';
+$paymentMethodsTable .= formGroup('name', 'Name', 'text', '', true);
+$paymentMethodsTable .= formGroup('code', 'Code', 'text', '', true, ['placeholder' => 'e.g., bdo, paymaya']);
+$paymentMethodsTable .= formGroup('display_name', 'Display Name', 'text', '', true, ['placeholder' => 'How it appears to users']);
+$paymentMethodsTable .= formGroup('description', 'Description', 'textarea', '', false);
+$paymentMethodsTable .= '<div class="form-check"><input type="checkbox" class="form-check-input" name="requires_account" id="requires_account"><label class="form-check-label" for="requires_account">Requires Account Information</label></div>';
+$paymentMethodsTable .= '</div>';
+$paymentMethodsTable .= '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>';
+$paymentMethodsTable .= '<button type="submit" class="btn btn-success">Add Payment Method</button></div>';
+$paymentMethodsTable .= '</form></div></div></div>';
+
+$content .= card('Payment Methods', $paymentMethodsTable);
+
+// Payment Accounts Section
+$paymentAccountsTable = '<div class="table-responsive"><table class="table table-hover">';
+$paymentAccountsTable .= '<thead><tr><th>Method</th><th>Account Name</th><th>Account Number</th><th>Account Holder</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+
+if (empty($paymentAccounts)) {
+    $paymentAccountsTable .= '<tr><td colspan="6" class="text-center">No payment accounts configured</td></tr>';
+} else {
+    foreach ($paymentAccounts as $pa) {
+        $statusBadge = $pa['is_active'] ? badge('Active', 'success') : badge('Inactive', 'secondary');
+        $paymentAccountsTable .= '<tr>';
+        $paymentAccountsTable .= '<td><strong>' . htmlspecialchars($pa['method_name']) . '</strong></td>';
+        $paymentAccountsTable .= '<td>' . htmlspecialchars($pa['account_name']) . '</td>';
+        $paymentAccountsTable .= '<td><code>' . htmlspecialchars($pa['account_number']) . '</code></td>';
+        $paymentAccountsTable .= '<td>' . htmlspecialchars($pa['account_holder']) . '</td>';
+        $paymentAccountsTable .= '<td>' . $statusBadge . '</td>';
+        $paymentAccountsTable .= '<td><button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editPayAccModal' . $pa['id'] . '"><i class="bi bi-pencil"></i> Edit</button> ';
+        $paymentAccountsTable .= '<form method="POST" style="display: inline;"><input type="hidden" name="action" value="delete_payment_account"><input type="hidden" name="id" value="' . $pa['id'] . '"><button type="submit" class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this payment account?\')"><i class="bi bi-trash"></i></button></form></td>';
+        $paymentAccountsTable .= '</tr>';
+        
+        // Edit modal
+        $paymentAccountsTable .= '<div class="modal fade" id="editPayAccModal' . $pa['id'] . '" tabindex="-1">';
+        $paymentAccountsTable .= '<div class="modal-dialog modal-lg"><div class="modal-content"><form method="POST">';
+        $paymentAccountsTable .= '<div class="modal-header"><h5 class="modal-title">Edit Payment Account</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>';
+        $paymentAccountsTable .= '<div class="modal-body">';
+        $paymentAccountsTable .= '<input type="hidden" name="action" value="edit_payment_account">';
+        $paymentAccountsTable .= '<input type="hidden" name="id" value="' . $pa['id'] . '">';
+        $paymentAccountsTable .= formGroup('account_name', 'Account Name', 'text', $pa['account_name'], true);
+        $paymentAccountsTable .= formGroup('account_number', 'Account Number', 'text', $pa['account_number'], true);
+        $paymentAccountsTable .= formGroup('account_holder', 'Account Holder Name', 'text', $pa['account_holder'], true);
+        $paymentAccountsTable .= formGroup('branch_name', 'Branch Name', 'text', $pa['branch_name'], false);
+        $paymentAccountsTable .= formGroup('instructions', 'Instructions', 'textarea', $pa['instructions'], false, ['rows' => '3']);
+        $paymentAccountsTable .= '<div class="form-check"><input type="checkbox" class="form-check-input" name="is_active" id="is_active_pa' . $pa['id'] . '" ' . ($pa['is_active'] ? 'checked' : '') . '>';
+        $paymentAccountsTable .= '<label class="form-check-label" for="is_active_pa' . $pa['id'] . '">Active</label></div>';
+        $paymentAccountsTable .= '</div>';
+        $paymentAccountsTable .= '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>';
+        $paymentAccountsTable .= '<button type="submit" class="btn btn-primary">Save Changes</button></div>';
+        $paymentAccountsTable .= '</form></div></div></div>';
+    }
+}
+
+$paymentAccountsTable .= '</tbody></table></div>';
+$paymentAccountsTable .= '<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addPayAccModal"><i class="bi bi-plus"></i> Add Payment Account</button>';
+
+// Add Payment Account Modal
+$paymentAccountsTable .= '<div class="modal fade" id="addPayAccModal" tabindex="-1">';
+$paymentAccountsTable .= '<div class="modal-dialog modal-lg"><div class="modal-content"><form method="POST">';
+$paymentAccountsTable .= '<div class="modal-header"><h5 class="modal-title">Add Payment Account</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>';
+$paymentAccountsTable .= '<div class="modal-body">';
+$paymentAccountsTable .= '<input type="hidden" name="action" value="add_payment_account">';
+
+// Payment method select
+$paymentAccountsTable .= '<div class="mb-3"><label for="payment_method_id" class="form-label">Payment Method <span class="text-danger">*</span></label>';
+$paymentAccountsTable .= '<select class="form-select" name="payment_method_id" id="payment_method_id" required>';
+$paymentAccountsTable .= '<option value="">-- Select Payment Method --</option>';
+foreach ($paymentMethods as $pm) {
+    $paymentAccountsTable .= '<option value="' . $pm['id'] . '">' . htmlspecialchars($pm['display_name']) . '</option>';
+}
+$paymentAccountsTable .= '</select></div>';
+
+$paymentAccountsTable .= formGroup('account_name', 'Account Name', 'text', '', true);
+$paymentAccountsTable .= formGroup('account_number', 'Account Number', 'text', '', true);
+$paymentAccountsTable .= formGroup('account_holder', 'Account Holder Name', 'text', '', true);
+$paymentAccountsTable .= formGroup('branch_name', 'Branch Name', 'text', '', false);
+$paymentAccountsTable .= formGroup('instructions', 'Instructions', 'textarea', '', false, ['rows' => '3', 'placeholder' => 'Payment instructions for customers']);
+$paymentAccountsTable .= '</div>';
+$paymentAccountsTable .= '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>';
+$paymentAccountsTable .= '<button type="submit" class="btn btn-success">Add Payment Account</button></div>';
+$paymentAccountsTable .= '</form></div></div></div>';
+
+$content .= card('Payment Accounts (Bank, GCash, PayMaya)', $paymentAccountsTable);
 
 // Create layout and render
 $layout = new AdminLayout('System Settings', 'System Settings', 'gear');

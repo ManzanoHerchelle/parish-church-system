@@ -39,17 +39,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'verify':
                 $notes = trim($_POST['notes'] ?? '');
                 $paymentService->verifyPayment($paymentId, $userId, $notes);
-                header('Location: /documentSystem/admin/manage-payments.php?status=success&message=Payment+verified');
+                header('Location: /documentSystem/admin/manage-payments.php?alert=success&message=Payment+verified');
                 exit;
                 
             case 'reject':
                 $notes = trim($_POST['notes'] ?? '');
                 if (!$notes) {
-                    header('Location: /documentSystem/admin/manage-payments.php?status=error&message=Rejection+reason+required');
+                    header('Location: /documentSystem/admin/manage-payments.php?alert=error&message=Rejection+reason+required');
                     exit;
                 }
                 $paymentService->rejectPayment($paymentId, $userId, $notes);
-                header('Location: /documentSystem/admin/manage-payments.php?status=success&message=Payment+rejected');
+                header('Location: /documentSystem/admin/manage-payments.php?alert=success&message=Payment+rejected');
                 exit;
         }
     }
@@ -102,7 +102,7 @@ $revenueQuery = "SELECT SUM(amount) as total FROM payments WHERE status = 'verif
 $totalRevenue = $conn->query($revenueQuery)->fetch_assoc()['total'] ?? 0;
 
 $statusMessage = $_GET['message'] ?? '';
-$statusType = $_GET['status'] ?? '';
+$statusType = $_GET['alert'] ?? '';
 
 closeDBConnection($conn);
 
