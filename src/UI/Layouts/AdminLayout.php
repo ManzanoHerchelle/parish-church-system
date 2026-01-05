@@ -173,6 +173,13 @@ HTML;
         </li>
 
         <li class="nav-item">
+            <a href="/documentSystem/admin/manage-logos.php" class="nav-link">
+                <i class="bi bi-image"></i>
+                <span>Manage Logos</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
             <a href="/documentSystem/admin/system-settings.php" class="nav-link">
                 <i class="bi bi-gear"></i>
                 <span>System Settings</span>
