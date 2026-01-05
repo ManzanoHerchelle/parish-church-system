@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Client Flow - Parish Document System</title>
+    <style>
+        @page {
+            margin: 2cm;
+            size: A4;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 4px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            page-break-before: avoid;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 5px solid #3498db;
+            padding-left: 15px;
+            margin-top: 25px;
+            page-break-after: avoid;
+        }
+        
+        h3 {
+            color: #555;
+            margin-top: 20px;
+        }
+        
+        .cover {
+            text-align: center;
+            padding: 100px 20px;
+            page-break-after: always;
+        }
+        
+        .cover h1 {
+            font-size: 48px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .cover .subtitle {
+            font-size: 24px;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+        }
+        
+        .cover .metadata {
+            font-size: 14px;
+            color: #95a5a6;
+            margin-top: 60px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        .step-header {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .substep {
+            background: #fff;
+            border-left: 3px solid #95a5a6;
+            padding: 10px;
+            margin: 10px 0 10px 20px;
+        }
+        
+        .email-sample {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .timeline {
+            border-left: 3px solid #3498db;
+            padding-left: 20px;
+            margin: 20px 0;
+        }
+        
+        .timeline-item {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .timeline-item::before {
+            content: "●";
+            position: absolute;
+            left: -27px;
+            color: #3498db;
+            font-size: 20px;
+        }
+        
+        .flowchart {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .flow-box {
+            background: #fff;
+            border: 2px solid #3498db;
+            padding: 15px;
+            margin: 10px auto;
+            border-radius: 5px;
+            max-width: 400px;
+        }
+        
+        .arrow {
+            color: #3498db;
+            font-size: 24px;
+            margin: 5px 0;
+        }
+        
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        .highlight {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background: #3498db;
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            page-break-after: always;
+        }
+        
+        .toc h2 {
+            border: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        .toc li::before {
+            content: "▶ ";
+            color: #3498db;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .badge-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .step, .substep {
+                page-break-inside: avoid;
+            }
+            
+            h1, h2, h3 {
+                page-break-after: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover">
+        <h1>Complete Client Flow</h1>
+        <div class="subtitle">Parish Document & Appointment System</div>
+        <div style="margin: 60px 0;">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ccircle cx='100' cy='100' r='80' fill='%233498db' opacity='0.2'/%3E%3Ctext x='100' y='120' text-anchor='middle' font-size='80' font-weight='bold' fill='%233498db'%3EPC%3C/text%3E%3C/svg%3E" alt="Parish Church Logo">
+        </div>
+        <div class="metadata">
+            <p><strong>Document Version:</strong> 1.0</p>
+            <p><strong>Last Updated:</strong> January 6, 2026</p>
+            <p><strong>System:</strong> Parish Ease Document System</p>
+        </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="toc">
+        <h2>📋 Table of Contents</h2>
+        <ul>
+            <li><a href="#introduction">Introduction</a></li>
+            <li><a href="#registration">User Registration & Verification</a></li>
+            <li><a href="#login">Login & Dashboard Access</a></li>
+            <li><a href="#document-flow">Document Request Flow</a></li>
+            <li><a href="#appointment-flow">Appointment Booking Flow</a></li>
+            <li><a href="#payment-process">Payment Processing</a></li>
+            <li><a href="#notifications">Email Notification System</a></li>
+            <li><a href="#tracking">Status Tracking</a></li>
+            <li><a href="#mobile">Mobile Experience</a></li>
+            <li><a href="#security">Security Features</a></li>
+            <li><a href="#use-cases">Typical Use Cases</a></li>
+            <li><a href="#flowchart">Complete System Flowchart</a></li>
+        </ul>
+    </div>
+
+    <!-- Introduction -->
+    <div class="section">
+        <h1 id="introduction">📖 Introduction</h1>
+        <p>This document provides a comprehensive guide to the client user journey through the Parish Document & Appointment System. It covers all interactions from initial registration through document pickup and appointment completion.</p>
+        
+        <div class="info">
+            <strong>🎯 System Purpose:</strong> Streamline the process of requesting church documents and booking appointments for sacraments and ceremonies.
+        </div>
+
+        <h3>Key Features:</h3>
+        <ul>
+            <li><strong>Document Requests:</strong> Baptismal certificates, marriage certificates, confirmation certificates, and more</li>
+            <li><strong>Appointment Booking:</strong> Weddings, baptisms, funeral masses, blessing ceremonies</li>
+            <li><strong>Online Payments:</strong> Secure payment submission with proof upload</li>
+            <li><strong>Real-time Tracking:</strong> Monitor request status at every stage</li>
+            <li><strong>Email Notifications:</strong> Automatic updates for all status changes</li>
+            <li><strong>Mobile Friendly:</strong> Responsive design for any device</li>
+        </ul>
+    </div>
+
+    <!-- Registration -->
+    <div class="section">
+        <h1 id="registration">👤 User Registration & Verification</h1>
+        
+        <div class="step">
+            <div class="step-header">STEP 1: Account Creation</div>
+            <p><strong>URL:</strong> <code>http://localhost/documentSystem/client/register.php</code></p>
+            <p>New users fill out the registration form with:</p>
+            <ul>
+                <li>Full Name</li>
+                <li>Email Address (must be unique)</li>
+                <li>Contact Number</li>
+                <li>Address</li>
+                <li>Password (minimum 8 characters)</li>
+                <li>Password Confirmation</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 2: Email Verification Sent</div>
+            <p>Immediately after registration, the system:</p>
+            <ul>
+                <li>Creates user account with <span class="badge badge-warning">UNVERIFIED</span> status</li>
+                <li>Generates unique verification token (expires in 24 hours)</li>
+                <li>Sends verification email to registered address</li>
+            </ul>
+            
+            <div class="email-sample">
+                <strong>📧 Email: "Verify Your Email - Parish Church System"</strong><br><br>
+                Dear [First Name],<br><br>
+                Thank you for registering with Parish Church System!<br><br>
+                Please verify your email address by clicking the link below:<br>
+                <a href="#">http://localhost/documentSystem/client/verify-email.php?token=ABC123...</a><br><br>
+                This link will expire in 24 hours.<br><br>
+                Best regards,<br>
+                Parish Church
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 3: Email Verification</div>
+            <p>User clicks verification link in email:</p>
+            <ul>
+                <li>System validates token (checks expiration and user match)</li>
+                <li>Updates user status to <span class="badge badge-success">VERIFIED</span></li>
+                <li>Shows success message</li>
+                <li>Redirects to login page</li>
+            </ul>
+            
+            <div class="warning">
+                <strong>⚠️ Important:</strong> Users cannot submit requests or book appointments until email is verified.
+            </div>
+        </div>
+    </div>
+
+    <!-- Login & Dashboard -->
+    <div class="section">
+        <h1 id="login">🔐 Login & Dashboard Access</h1>
+        
+        <div class="step">
+            <div class="step-header">STEP 4: User Login</div>
+            <p><strong>URL:</strong> <code>http://localhost/documentSystem/client/login.php</code></p>
+            <p>Users log in with email and password. The system:</p>
+            <ul>
+                <li>Validates credentials</li>
+                <li>Checks email verification status</li>
+                <li>Creates secure session</li>
+                <li>Redirects based on role:
+                    <ul>
+                        <li><code>client</code> → Client Dashboard</li>
+                        <li><code>admin/staff</code> → Admin Dashboard</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <div class="step-header">Client Dashboard Overview</div>
+            <p><strong>URL:</strong> <code>http://localhost/documentSystem/client/dashboard.php</code></p>
+            <p>After successful login, clients see:</p>
+            
+            <h4>📊 Quick Stats Cards:</h4>
+            <ul>
+                <li><strong>Pending Documents:</strong> Count of requests awaiting processing</li>
+                <li><strong>Approved Documents:</strong> Ready for payment/pickup</li>
+                <li><strong>Upcoming Appointments:</strong> Confirmed bookings</li>
+                <li><strong>Pending Payments:</strong> Outstanding payment amounts</li>
+            </ul>
+
+            <h4>🔔 Recent Activity Feed:</h4>
+            <ul>
+                <li>Last 10 system notifications</li>
+                <li>Status updates for documents and appointments</li>
+                <li>Payment confirmations</li>
+            </ul>
+
+            <h4>🧭 Navigation Menu:</h4>
+            <ul>
+                <li>Home (Dashboard)</li>
+                <li>View Appointments</li>
+                <li>New Appointment</li>
+                <li>Request Document</li>
+                <li>View Documents</li>
+                <li>Change Password</li>
+                <li>Log Out</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Document Request Flow -->
+    <div class="section">
+        <h1 id="document-flow">📄 Document Request Flow</h1>
+        
+        <div class="step">
+            <div class="step-header">STEP 5a: Initiate Document Request</div>
+            <p><strong>URL:</strong> <code>http://localhost/documentSystem/client/request-documents.php</code></p>
+            <p>User navigates to "Request Document" from dashboard</p>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 6a: Select Document Type</div>
+            <p>Visual card-based selection showing:</p>
+            <ul>
+                <li>Document name and description</li>
+                <li>Processing fee (₱50 - ₱500)</li>
+                <li>Processing time (3-7 business days)</li>
+                <li>Required supporting documents</li>
+            </ul>
+            
+            <h4>Common Document Types:</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Document</th>
+                        <th>Fee</th>
+                        <th>Processing Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Baptismal Certificate</td>
+                        <td>₱150</td>
+                        <td>3 days</td>
+                    </tr>
+                    <tr>
+                        <td>Marriage Certificate</td>
+                        <td>₱200</td>
+                        <td>5 days</td>
+                    </tr>
+                    <tr>
+                        <td>Confirmation Certificate</td>
+                        <td>₱150</td>
+                        <td>3 days</td>
+                    </tr>
+                    <tr>
+                        <td>Certificate of No Marriage</td>
+                        <td>₱500</td>
+                        <td>7 days</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 7a: Provide Request Details</div>
+            <p>User fills out form:</p>
+            <ul>
+                <li><strong>Purpose:</strong> Why document is needed (employment, travel, school, etc.)</li>
+                <li><strong>Additional Notes:</strong> Special requests or information</li>
+                <li><strong>Supporting Documents:</strong> Upload ID, birth certificate, etc. (optional)</li>
+                <li><strong>Payment Proof:</strong> Upload bank receipt if already paid (optional)</li>
+            </ul>
+            
+            <div class="info">
+                <strong>💡 Tip:</strong> Uploading payment proof with initial request speeds up processing time.
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 8a: Request Submitted</div>
+            <p>System automatically:</p>
+            <ul>
+                <li>Generates unique reference number (e.g., <code>DOC-A3F7B2C4-1735948800</code>)</li>
+                <li>Creates document request with status <span class="badge badge-warning">PENDING</span></li>
+                <li>Creates payment record with status <span class="badge badge-warning">PENDING</span></li>
+                <li>Sends confirmation email to client</li>
+                <li>Creates in-app notification</li>
+                <li>Notifies staff members via email</li>
+            </ul>
+
+            <div class="email-sample">
+                <strong>📧 Client Receives: "Document Request Confirmation"</strong><br><br>
+                Dear [First Name],<br><br>
+                Your request for <strong>Baptismal Certificate</strong> has been received.<br><br>
+                <strong>Reference Number:</strong> DOC-A3F7B2C4-1735948800<br>
+                <strong>Document Type:</strong> Baptismal Certificate<br>
+                <strong>Amount Due:</strong> ₱150.00<br>
+                <strong>Status:</strong> Pending Review<br><br>
+                You can track your request status at:<br>
+                <a href="#">View My Documents</a><br><br>
+                We will notify you once your request is reviewed.<br><br>
+                Parish Church
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 9a: Staff Review & Approval</div>
+            <p>Staff member reviews request in admin panel:</p>
+            <ul>
+                <li>Verifies request details and supporting documents</li>
+                <li>Checks parish records for requested document</li>
+                <li>Updates status to <span class="badge badge-success">APPROVED</span> or <span class="badge badge-danger" style="background:#dc3545">REJECTED</span></li>
+            </ul>
+
+            <div class="substep">
+                <strong>If APPROVED:</strong>
+                <ul>
+                    <li>Client receives "Document Request Approved" email</li>
+                    <li>Payment becomes due</li>
+                    <li>Document processing begins</li>
+                </ul>
+            </div>
+
+            <div class="substep">
+                <strong>If REJECTED:</strong>
+                <ul>
+                    <li>Client receives "Document Request Rejected" email with reason</li>
+                    <li>Request closed, no payment required</li>
+                </ul>
+            </div>
+
+            <div class="email-sample">
+                <strong>📧 Client Receives: "Document Request Approved"</strong><br><br>
+                Dear [First Name],<br><br>
+                Good news! Your document request has been approved.<br><br>
+                <strong>Reference:</strong> DOC-A3F7B2C4-1735948800<br>
+                <strong>Document:</strong> Baptismal Certificate<br>
+                <strong>Amount Due:</strong> ₱150.00<br><br>
+                <strong>Payment Instructions:</strong><br>
+                Please pay via bank deposit or GCash and upload proof of payment.<br><br>
+                Bank Details:<br>
+                • Bank: BDO<br>
+                • Account: Parish Church<br>
+                • Number: 1234567890<br><br>
+                Upload payment proof at: <a href="#">My Documents</a><br><br>
+                Parish Church
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 10a: Payment Submission</div>
+            <p>Client submits payment:</p>
+            <ol>
+                <li>Makes bank deposit or online transfer</li>
+                <li>Navigates to "View Documents" page</li>
+                <li>Clicks "Upload Payment Proof" on the request</li>
+                <li>Uploads receipt image/PDF</li>
+            </ol>
+
+            <div class="info">
+                <strong>📤 Accepted Formats:</strong> JPG, PNG, PDF (Max 5MB)
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 11a: Payment Verification</div>
+            <p>Staff member verifies payment:</p>
+            <ul>
+                <li>Reviews uploaded receipt</li>
+                <li>Confirms amount matches document fee</li>
+                <li>Updates payment status to <span class="badge badge-success">VERIFIED</span></li>
+                <li>Document moves to <span class="badge badge-success">READY FOR PICKUP</span></li>
+            </ul>
+
+            <div class="email-sample">
+                <strong>📧 Client Receives: "Payment Verified - Document Ready"</strong><br><br>
+                Dear [First Name],<br><br>
+                Your payment has been verified!<br><br>
+                Your <strong>Baptismal Certificate</strong> is now ready for pickup.<br><br>
+                <strong>Reference:</strong> DOC-A3F7B2C4-1735948800<br>
+                <strong>Pickup Hours:</strong> Mon-Fri 8:00 AM - 5:00 PM<br>
+                <strong>Location:</strong> Parish Office<br><br>
+                Please bring a valid ID when picking up your document.<br><br>
+                Parish Church
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 12a: Document Pickup</div>
+            <p>Client picks up document at parish office:</p>
+            <ul>
+                <li>Presents reference number and valid ID</li>
+                <li>Staff verifies identity</li>
+                <li>Hands over sealed document</li>
+                <li>Updates status to <span class="badge badge-success">COMPLETED</span></li>
+            </ul>
+
+            <div class="email-sample">
+                <strong>📧 Client Receives: "Document Released"</strong><br><br>
+                Dear [First Name],<br><br>
+                Your document has been successfully released.<br><br>
+                Thank you for using our document request system!<br><br>
+                If you need any assistance, please contact us.<br><br>
+                Parish Church
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Booking Flow -->
+    <div class="section">
+        <h1 id="appointment-flow">📅 Appointment Booking Flow</h1>
+
+        <div class="step">
+            <div class="step-header">STEP 5b: Initiate Appointment Booking</div>
+            <p><strong>URL:</strong> <code>http://localhost/documentSystem/client/new-appointment.php</code></p>
+            <p>User clicks "New Appointment" from dashboard</p>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 6b: Select Booking Type</div>
+            <p>Visual card selection for ceremony types:</p>
+            <ul>
+                <li><strong>Wedding:</strong> Church wedding ceremony (₱5,000+)</li>
+                <li><strong>Baptism:</strong> Infant or adult baptism (₱500)</li>
+                <li><strong>Funeral Mass:</strong> Memorial service (₱1,000)</li>
+                <li><strong>House Blessing:</strong> Home dedication (₱800)</li>
+                <li><strong>Special Mass:</strong> Thanksgiving, anniversary mass (₱1,500)</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 7b: Select Date & Time</div>
+            <p>Interactive booking calendar:</p>
+            <ul>
+                <li><strong>Date Picker:</strong> Calendar view with blocked dates grayed out</li>
+                <li><strong>Blocked Dates:</strong> Automatically excludes:
+                    <ul>
+                        <li>Past dates</li>
+                        <li>Staff absence dates</li>
+                        <li>System-defined blocked dates (holidays, maintenance)</li>
+                    </ul>
+                </li>
+                <li><strong>Time Slots:</strong> Available slots from 9:00 AM to 5:00 PM (30-minute intervals)</li>
+            </ul>
+
+            <div class="warning">
+                <strong>⚠️ Note:</strong> Time slots already booked or during staff absence are not selectable.
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 8b: Submit Booking Request</div>
+            <p>System creates appointment with:</p>
+            <ul>
+                <li>Status: <span class="badge badge-warning">PENDING CONFIRMATION</span></li>
+                <li>Payment Status: <span class="badge badge-warning">UNPAID</span></li>
+                <li>Auto-assigned to available staff (round-robin)</li>
+            </ul>
+
+            <div class="email-sample">
+                <strong>📧 Client Receives: "Appointment Request Received"</strong><br><br>
+                Dear [First Name],<br><br>
+                Your appointment request has been received.<br><br>
+                <strong>Booking Type:</strong> Wedding<br>
+                <strong>Requested Date:</strong> February 14, 2026<br>
+                <strong>Requested Time:</strong> 10:00 AM<br>
+                <strong>Status:</strong> Pending Confirmation<br><br>
+                A staff member will review your request and confirm availability.<br><br>
+                Parish Church
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">STEP 9b: Staff Confirmation & Payment</div>
+            <p>Staff reviews and confirms appointment:</p>
+            <ul>
+                <li>Checks priest/minister availability</li>
+                <li>Verifies venue availability</li>
+                <li>Updates status to <span class="badge badge-success">CONFIRMED</span></li>
+                <li>Client receives confirmation email with payment instructions</li>
+            </ul>
+
+            <div class="email-sample">
+                <strong>📧 Client Receives: "Appointment Confirmed"</strong><br><br>
+                Dear [First Name],<br><br>
+                Your appointment has been confirmed!<br><br>
+                <strong>Booking Type:</strong> Wedding<br>
+                <strong>Date:</strong> February 14, 2026<br>
+                <strong>Time:</strong> 10:00 AM<br>
+                <strong>Amount Due:</strong> ₱5,000.00<br><br>
+                Please submit payment before your appointment date.<br><br>
+                See you on your special day!<br><br>
+                Parish Church
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Process -->
+    <div class="section">
+        <h1 id="payment-process">💳 Payment Processing</h1>
+
+        <div class="info">
+            <strong>Current System:</strong> Manual payment verification via bank deposit/online transfer with proof upload.
+        </div>
+
+        <h3>Payment Methods Accepted:</h3>
+        <ul>
+            <li>Bank Deposit (BDO, BPI, Metrobank, etc.)</li>
+            <li>Online Transfer (GCash, PayMaya, InstaPay)</li>
+            <li>Over-the-Counter (Parish Office)</li>
+        </ul>
+
+        <h3>Payment Workflow:</h3>
+        <div class="timeline">
+            <div class="timeline-item">
+                <strong>Step 1:</strong> Client makes payment via chosen method
+            </div>
+            <div class="timeline-item">
+                <strong>Step 2:</strong> Client uploads proof of payment (receipt/screenshot)
+            </div>
+            <div class="timeline-item">
+                <strong>Step 3:</strong> Staff receives notification of new payment submission
+            </div>
+            <div class="timeline-item">
+                <strong>Step 4:</strong> Staff verifies payment against bank records
+            </div>
+            <div class="timeline-item">
+                <strong>Step 5:</strong> Payment marked as <span class="badge badge-success">VERIFIED</span>
+            </div>
+            <div class="timeline-item">
+                <strong>Step 6:</strong> Associated document/appointment status updated
+            </div>
+            <div class="timeline-item">
+                <strong>Step 7:</strong> Client receives payment confirmation email
+            </div>
+        </div>
+
+        <div class="highlight">
+            <strong>🚀 Future Enhancement:</strong> Online payment integration with GCash/PayMaya for instant verification (currently in development).
+        </div>
+    </div>
+
+    <!-- Email Notifications -->
+    <div class="section">
+        <h1 id="notifications">📧 Email Notification System</h1>
+
+        <p>The system sends automated emails for 10 different events:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Event</th>
+                    <th>Trigger</th>
+                    <th>Recipient</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Email Verification</td>
+                    <td>User registration</td>
+                    <td>New user</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Document Request Confirmation</td>
+                    <td>Request submitted</td>
+                    <td>Client</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Document Request Approved</td>
+                    <td>Staff approves request</td>
+                    <td>Client</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Document Request Rejected</td>
+                    <td>Staff rejects request</td>
+                    <td>Client</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Document Ready for Pickup</td>
+                    <td>Payment verified + document prepared</td>
+                    <td>Client</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>Appointment Request Received</td>
+                    <td>Booking submitted</td>
+                    <td>Client</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>Appointment Confirmed</td>
+                    <td>Staff confirms booking</td>
+                    <td>Client</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>Appointment Cancelled</td>
+                    <td>Staff/client cancels</td>
+                    <td>Client</td>
+                </tr>
+                <tr>
+                    <td>9</td>
+                    <td>Payment Verification</td>
+                    <td>Staff verifies payment</td>
+                    <td>Client</td>
+                </tr>
+                <tr>
+                    <td>10</td>
+                    <td>SLA Breach Alert</td>
+                    <td>Request exceeds processing time</td>
+                    <td>Staff/Admin</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="info">
+            <strong>📱 Notification Channels:</strong>
+            <ul>
+                <li>Email (primary - sent for all events)</li>
+                <li>In-app notifications (dashboard notification center)</li>
+                <li>SMS (planned for future release)</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Status Tracking -->
+    <div class="section">
+        <h1 id="tracking">📊 Status Tracking</h1>
+
+        <h3>Document Request Statuses:</h3>
+        <div class="timeline">
+            <div class="timeline-item">
+                <span class="badge badge-warning">PENDING</span> → Request submitted, awaiting staff review
+            </div>
+            <div class="timeline-item">
+                <span class="badge badge-success">APPROVED</span> → Verified by staff, awaiting payment
+            </div>
+            <div class="timeline-item">
+                <span class="badge badge-success">PAID</span> → Payment verified, document being prepared
+            </div>
+            <div class="timeline-item">
+                <span class="badge badge-success">READY FOR PICKUP</span> → Document complete, ready for release
+            </div>
+            <div class="timeline-item">
+                <span class="badge badge-success">COMPLETED</span> → Document released to client
+            </div>
+            <div class="timeline-item">
+                <span class="badge" style="background:#dc3545; color:white">REJECTED</span> → Request denied with reason provided
+            </div>
+        </div>
+
+        <h3>Appointment Booking Statuses:</h3>
+        <div class="timeline">
+            <div class="timeline-item">
+                <span class="badge badge-warning">PENDING</span> → Booking submitted, awaiting confirmation
+            </div>
+            <div class="timeline-item">
+                <span class="badge badge-success">CONFIRMED</span> → Approved by staff, awaiting payment
+            </div>
+            <div class="timeline-item">
+                <span class="badge badge-success">PAID</span> → Payment verified, appointment scheduled
+            </div>
+            <div class="timeline-item">
+                <span class="badge badge-success">COMPLETED</span> → Ceremony completed
+            </div>
+            <div class="timeline-item">
+                <span class="badge" style="background:#dc3545; color:white">CANCELLED</span> → Booking cancelled by staff or client
+            </div>
+        </div>
+
+        <h3>Payment Statuses:</h3>
+        <div class="timeline">
+            <div class="timeline-item">
+                <span class="badge badge-warning">PENDING</span> → Awaiting payment submission
+            </div>
+            <div class="timeline-item">
+                <span class="badge badge-info">SUBMITTED</span> → Proof uploaded, awaiting verification
+            </div>
+            <div class="timeline-item">
+                <span class="badge badge-success">VERIFIED</span> → Payment confirmed by staff
+            </div>
+            <div class="timeline-item">
+                <span class="badge" style="background:#dc3545; color:white">REJECTED</span> → Invalid payment proof
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Experience -->
+    <div class="section">
+        <h1 id="mobile">📱 Mobile Experience</h1>
+
+        <p>The system is fully responsive and optimized for mobile devices:</p>
+
+        <h3>Mobile Features:</h3>
+        <ul>
+            <li><strong>Responsive Design:</strong> Adapts to any screen size (phones, tablets, desktops)</li>
+            <li><strong>Touch-Optimized:</strong> Large buttons and touch-friendly interfaces</li>
+            <li><strong>Mobile Camera Upload:</strong> Take photos of receipts directly from mobile camera</li>
+            <li><strong>Swipe Navigation:</strong> Sidebar slides in/out on mobile</li>
+            <li><strong>Fast Loading:</strong> Optimized for mobile data connections</li>
+        </ul>
+
+        <h3>Mobile User Journey:</h3>
+        <ol>
+            <li>Open browser on phone (Chrome, Safari, etc.)</li>
+            <li>Navigate to system URL</li>
+            <li>Login or register</li>
+            <li>Dashboard displays in mobile-optimized layout</li>
+            <li>Request documents or book appointments</li>
+            <li>Take photos of payment receipts using camera</li>
+            <li>Upload directly from photo gallery</li>
+            <li>Receive email notifications on mobile</li>
+            <li>Track status updates on-the-go</li>
+        </ol>
+
+        <div class="highlight">
+            <strong>✅ Best Practice:</strong> Bookmark the system URL on your mobile home screen for easy access!
+        </div>
+    </div>
+
+    <!-- Security Features -->
+    <div class="section">
+        <h1 id="security">🔒 Security Features</h1>
+
+        <h3>Authentication & Authorization:</h3>
+        <ul>
+            <li><strong>Email Verification:</strong> Required before any transactions</li>
+            <li><strong>Secure Sessions:</strong> PHP sessions with CSRF protection</li>
+            <li><strong>Password Hashing:</strong> Bcrypt encryption for all passwords</li>
+            <li><strong>Role-Based Access:</strong> Clients can only see their own data</li>
+            <li><strong>Session Timeout:</strong> Auto-logout after inactivity</li>
+        </ul>
+
+        <h3>Data Protection:</h3>
+        <ul>
+            <li><strong>SQL Injection Prevention:</strong> Prepared statements throughout</li>
+            <li><strong>XSS Protection:</strong> Input sanitization and output encoding</li>
+            <li><strong>CSRF Tokens:</strong> Protect against cross-site request forgery</li>
+            <li><strong>File Upload Validation:</strong> Type and size checks for uploads</li>
+            <li><strong>Secure File Storage:</strong> Uploaded files stored outside web root</li>
+        </ul>
+
+        <h3>Privacy:</h3>
+        <ul>
+            <li><strong>Data Isolation:</strong> Users can only access their own records</li>
+            <li><strong>Audit Logging:</strong> All actions logged for accountability</li>
+            <li><strong>Email Privacy:</strong> Emails use BCC for group notifications</li>
+        </ul>
+    </div>
+
+    <!-- Use Cases -->
+    <div class="section">
+        <h1 id="use-cases">💡 Typical Use Cases</h1>
+
+        <div class="step">
+            <div class="step-header">Use Case 1: Requesting Baptismal Certificate for Employment</div>
+            <div class="timeline">
+                <div class="timeline-item"><strong>Day 1, 9:00 AM:</strong> Maria registers account, verifies email</div>
+                <div class="timeline-item"><strong>Day 1, 9:15 AM:</strong> Logs in, requests Baptismal Certificate, uploads ID</div>
+                <div class="timeline-item"><strong>Day 1, 2:00 PM:</strong> Staff approves request (4 hours turnaround)</div>
+                <div class="timeline-item"><strong>Day 1, 3:00 PM:</strong> Maria pays ₱150 via GCash, uploads receipt</div>
+                <div class="timeline-item"><strong>Day 2, 10:00 AM:</strong> Staff verifies payment</div>
+                <div class="timeline-item"><strong>Day 3, 4:00 PM:</strong> Document ready for pickup (3-day processing)</div>
+                <div class="timeline-item"><strong>Day 4, 11:00 AM:</strong> Maria picks up certificate</div>
+            </div>
+            <div class="highlight">
+                <strong>Total Time:</strong> 3 business days from payment to pickup
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">Use Case 2: Booking Wedding Ceremony</div>
+            <div class="timeline">
+                <div class="timeline-item"><strong>2 Months Before:</strong> Juan books wedding for Feb 14, 2026</div>
+                <div class="timeline-item"><strong>Same Day:</strong> Staff confirms date is available</div>
+                <div class="timeline-item"><strong>1 Week Later:</strong> Juan pays ₱5,000 down payment</div>
+                <div class="timeline-item"><strong>1 Month Before:</strong> Staff sends reminder email</div>
+                <div class="timeline-item"><strong>1 Week Before:</strong> Final confirmation and details sent</div>
+                <div class="timeline-item"><strong>Wedding Day:</strong> Ceremony completed, status updated</div>
+            </div>
+            <div class="highlight">
+                <strong>Planning Time:</strong> 2-3 months advance booking recommended
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">Use Case 3: Urgent Document Request</div>
+            <div class="timeline">
+                <div class="timeline-item"><strong>Monday 8:00 AM:</strong> Client requests Marriage Certificate</div>
+                <div class="timeline-item"><strong>Monday 9:00 AM:</strong> Client pays immediately and uploads receipt</div>
+                <div class="timeline-item"><strong>Monday 10:00 AM:</strong> Staff approves and verifies payment (2-hour turnaround)</div>
+                <div class="timeline-item"><strong>Monday 3:00 PM:</strong> Document prepared (same day)</div>
+                <div class="timeline-item"><strong>Monday 4:30 PM:</strong> Client picks up document</div>
+            </div>
+            <div class="highlight">
+                <strong>Express Processing:</strong> Same-day service possible for urgent requests with immediate payment
+            </div>
+        </div>
+    </div>
+
+    <!-- Flowchart -->
+    <div class="section">
+        <h1 id="flowchart">🗺️ Complete System Flowchart</h1>
+
+        <div class="flowchart">
+            <div class="flow-box" style="background:#3498db; color:white;">
+                <strong>START: User Visits System</strong>
+            </div>
+            <div class="arrow">↓</div>
+            <div class="flow-box">
+                New User?<br>
+                YES → Register → Verify Email<br>
+                NO → Login
+            </div>
+            <div class="arrow">↓</div>
+            <div class="flow-box" style="background:#28a745; color:white;">
+                <strong>Client Dashboard</strong><br>
+                View Stats | Recent Activity | Navigation
+            </div>
+            <div class="arrow">↓</div>
+            <div class="flow-box">
+                Choose Action:<br>
+                📄 Request Document | 📅 Book Appointment
+            </div>
+            
+            <!-- Document Flow -->
+            <div style="margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 8px;">
+                <strong style="color: #2e7d32;">📄 DOCUMENT FLOW</strong>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Select Document Type</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Fill Details + Upload Files</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box" style="background:#ffc107;">Submit Request (PENDING)</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Staff Reviews</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box" style="background:#28a745; color:white;">Request APPROVED</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Client Pays + Uploads Receipt</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Staff Verifies Payment</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box" style="background:#28a745; color:white;">READY FOR PICKUP</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Client Picks Up Document</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box" style="background:#28a745; color:white;"><strong>COMPLETED</strong></div>
+            </div>
+
+            <!-- Appointment Flow -->
+            <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                <strong style="color: #1565c0;">📅 APPOINTMENT FLOW</strong>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Select Booking Type</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Choose Date & Time</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box" style="background:#ffc107;">Submit Booking (PENDING)</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Staff Confirms Availability</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box" style="background:#28a745; color:white;">Booking CONFIRMED</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Client Pays</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Staff Verifies Payment</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box" style="background:#28a745; color:white;">PAID - Appointment Scheduled</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box">Appointment Day Arrives</div>
+                <div class="arrow">↓</div>
+                <div class="flow-box" style="background:#28a745; color:white;"><strong>COMPLETED</strong></div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <div class="flow-box" style="background:#3498db; color:white;">
+                    <strong>END: Service Delivered</strong><br>
+                    Client Satisfaction Achieved! ⭐
+                </div>
+            </div>
+        </div>
+
+        <div class="info" style="margin-top: 20px;">
+            <strong>📌 Key Points:</strong>
+            <ul>
+                <li>All status changes trigger email notifications</li>
+                <li>Clients can track progress in real-time via dashboard</li>
+                <li>Staff receive alerts for pending actions and SLA breaches</li>
+                <li>Payment verification required before service delivery</li>
+                <li>Average processing time: 3-7 business days for documents</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Contact & Support -->
+    <div class="section">
+        <h1>📞 Contact & Support</h1>
+        
+        <div class="highlight">
+            <h3>Parish Office Contact Information:</h3>
+            <ul>
+                <li><strong>📧 Email:</strong> maequinas@gmail.com</li>
+                <li><strong>📱 Hotline:</strong> 0999 MAYNAY</li>
+                <li><strong>🕐 Office Hours:</strong> Monday - Friday, 8:00 AM - 5:00 PM</li>
+                <li><strong>📍 Address:</strong> Parish Church, Local City</li>
+            </ul>
+        </div>
+
+        <h3>For Technical Support:</h3>
+        <ul>
+            <li>Login issues → Contact parish office via email</li>
+            <li>Payment verification questions → Call hotline during office hours</li>
+            <li>Document status inquiries → Check dashboard or email updates</li>
+            <li>System bugs → Report to maequinas@gmail.com with screenshots</li>
+        </ul>
+    </div>
+
+    <!-- Footer -->
+    <div style="margin-top: 60px; padding-top: 20px; border-top: 2px solid #ddd; text-align: center; color: #7f8c8d;">
+        <p><strong>Parish Ease: Document & Appointment System</strong></p>
+        <p>Version 1.0 | © 2026 Parish Church | All Rights Reserved</p>
+        <p style="font-size: 12px; margin-top: 20px;">
+            This document is confidential and intended for internal use and client guidance only.<br>
+            Last Updated: January 6, 2026
+        </p>
+    </div>
+</body>
+</html>

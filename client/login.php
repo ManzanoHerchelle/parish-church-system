@@ -6,7 +6,7 @@ startSecureSession();
 // Check if already logged in
 if (isLoggedIn()) {
     $role = getCurrentUserRole();
-    $redirectUrl = ($role === 'admin' || $role === 'staff') ? '/admin/dashboard.php' : '/client/dashboard.php';
+    $redirectUrl = ($role === 'admin' || $role === 'staff') ? '/documentSystem/admin/dashboard.php' : '/documentSystem/client/dashboard.php';
     header('Location: ' . $redirectUrl);
     exit;
 }

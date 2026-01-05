@@ -334,6 +334,339 @@ class EmailHandler {
         ";
     }
     
+    /**
+     * Send document approved notification
+     */
+    public function sendDocumentApprovedNotification($userId, $email, $firstName, $refNumber, $docType, $notes = '') {
+        $subject = 'Document Request Approved - ' . $refNumber;
+        $body = $this->getDocumentApprovedTemplate($firstName, $refNumber, $docType, $notes);
+        
+        return $this->sendEmail($email, $subject, $body, $userId);
+    }
+    
+    /**
+     * Send document rejected notification
+     */
+    public function sendDocumentRejectedNotification($userId, $email, $firstName, $refNumber, $docType, $reason = '') {
+        $subject = 'Document Request Rejected - ' . $refNumber;
+        $body = $this->getDocumentRejectedTemplate($firstName, $refNumber, $docType, $reason);
+        
+        return $this->sendEmail($email, $subject, $body, $userId);
+    }
+    
+    /**
+     * Send booking confirmed notification
+     */
+    public function sendBookingConfirmedNotification($userId, $email, $firstName, $refNumber, $bookingType, $date, $time, $notes = '') {
+        $subject = 'Booking Confirmed - ' . $refNumber;
+        $body = $this->getBookingConfirmedTemplate($firstName, $refNumber, $bookingType, $date, $time, $notes);
+        
+        return $this->sendEmail($email, $subject, $body, $userId);
+    }
+    
+    /**
+     * Send booking cancelled notification
+     */
+    public function sendBookingCancelledNotification($userId, $email, $firstName, $refNumber, $bookingType, $reason = '') {
+        $subject = 'Booking Cancelled - ' . $refNumber;
+        $body = $this->getBookingCancelledTemplate($firstName, $refNumber, $bookingType, $reason);
+        
+        return $this->sendEmail($email, $subject, $body, $userId);
+    }
+    
+    /**
+     * Send payment verified notification
+     */
+    public function sendPaymentVerifiedNotification($userId, $email, $firstName, $transactionId, $amount, $notes = '') {
+        $subject = 'Payment Verified - ' . $transactionId;
+        $body = $this->getPaymentVerifiedTemplate($firstName, $transactionId, $amount, $notes);
+        
+        return $this->sendEmail($email, $subject, $body, $userId);
+    }
+    
+    /**
+     * Send payment rejected notification
+     */
+    public function sendPaymentRejectedNotification($userId, $email, $firstName, $transactionId, $amount, $reason = '') {
+        $subject = 'Payment Rejected - ' . $transactionId;
+        $body = $this->getPaymentRejectedTemplate($firstName, $transactionId, $amount, $reason);
+        
+        return $this->sendEmail($email, $subject, $body, $userId);
+    }
+    
+    /**
+     * Additional Email Templates
+     */
+    private function getDocumentApprovedTemplate($firstName, $refNumber, $docType, $notes = '') {
+        $notesHTML = !empty($notes) ? "<p><strong>Staff Notes:</strong><br>{$notes}</p>" : '';
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #10b981; color: white; padding: 20px; text-align: center; }
+                .content { background: #f9f9f9; padding: 30px; }
+                .info-box { background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; }
+                .button { display: inline-block; padding: 12px 30px; background: #10b981; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>Document Request Approved ✓</h1>
+                </div>
+                <div class='content'>
+                    <h2>Hello, {$firstName}!</h2>
+                    <p>Good news! Your document request has been <strong>approved</strong>.</p>
+                    <div class='info-box'>
+                        <strong>Reference Number:</strong> {$refNumber}<br>
+                        <strong>Document Type:</strong> {$docType}<br>
+                        <strong>Status:</strong> Approved
+                    </div>
+                    {$notesHTML}
+                    <p>Your document will be ready for pickup soon. Please contact the church office to arrange pickup.</p>
+                    <p style='text-align: center;'>
+                        <a href='" . BASE_URL . "/client/dashboard.php' class='button'>View Request Details</a>
+                    </p>
+                </div>
+                <div class='footer'>
+                    <p>&copy; 2026 Parish Church. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+    
+    private function getDocumentRejectedTemplate($firstName, $refNumber, $docType, $reason = '') {
+        $reasonHTML = !empty($reason) ? "<p><strong>Reason:</strong><br>{$reason}</p>" : '';
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #ef4444; color: white; padding: 20px; text-align: center; }
+                .content { background: #f9f9f9; padding: 30px; }
+                .info-box { background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; }
+                .button { display: inline-block; padding: 12px 30px; background: #ef4444; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>Document Request Status Update</h1>
+                </div>
+                <div class='content'>
+                    <h2>Hello, {$firstName}!</h2>
+                    <p>We regret to inform you that your document request has been <strong>rejected</strong>.</p>
+                    <div class='info-box'>
+                        <strong>Reference Number:</strong> {$refNumber}<br>
+                        <strong>Document Type:</strong> {$docType}<br>
+                        <strong>Status:</strong> Rejected
+                    </div>
+                    {$reasonHTML}
+                    <p>If you have any questions, please contact the church office for more information.</p>
+                    <p style='text-align: center;'>
+                        <a href='" . BASE_URL . "/client/dashboard.php' class='button'>View Request Details</a>
+                    </p>
+                </div>
+                <div class='footer'>
+                    <p>&copy; 2026 Parish Church. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+    
+    private function getBookingConfirmedTemplate($firstName, $refNumber, $bookingType, $date, $time, $notes = '') {
+        $formattedDate = date('F j, Y', strtotime($date));
+        $formattedTime = date('g:i A', strtotime($time));
+        $notesHTML = !empty($notes) ? "<p><strong>Additional Notes:</strong><br>{$notes}</p>" : '';
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #10b981; color: white; padding: 20px; text-align: center; }
+                .content { background: #f9f9f9; padding: 30px; }
+                .info-box { background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; }
+                .button { display: inline-block; padding: 12px 30px; background: #10b981; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>Booking Confirmed ✓</h1>
+                </div>
+                <div class='content'>
+                    <h2>Hello, {$firstName}!</h2>
+                    <p>Your booking has been <strong>confirmed</strong>!</p>
+                    <div class='info-box'>
+                        <strong>Reference Number:</strong> {$refNumber}<br>
+                        <strong>Booking Type:</strong> {$bookingType}<br>
+                        <strong>Date:</strong> {$formattedDate}<br>
+                        <strong>Time:</strong> {$formattedTime}<br>
+                        <strong>Status:</strong> Confirmed
+                    </div>
+                    {$notesHTML}
+                    <p>Please arrive 10 minutes early for your appointment. If you need to reschedule, contact the church office as soon as possible.</p>
+                    <p style='text-align: center;'>
+                        <a href='" . BASE_URL . "/client/dashboard.php' class='button'>View Booking Details</a>
+                    </p>
+                </div>
+                <div class='footer'>
+                    <p>&copy; 2026 Parish Church. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+    
+    private function getBookingCancelledTemplate($firstName, $refNumber, $bookingType, $reason = '') {
+        $reasonHTML = !empty($reason) ? "<p><strong>Cancellation Reason:</strong><br>{$reason}</p>" : '';
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #ef4444; color: white; padding: 20px; text-align: center; }
+                .content { background: #f9f9f9; padding: 30px; }
+                .info-box { background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; }
+                .button { display: inline-block; padding: 12px 30px; background: #ef4444; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>Booking Cancelled</h1>
+                </div>
+                <div class='content'>
+                    <h2>Hello, {$firstName}!</h2>
+                    <p>Your booking has been <strong>cancelled</strong>.</p>
+                    <div class='info-box'>
+                        <strong>Reference Number:</strong> {$refNumber}<br>
+                        <strong>Booking Type:</strong> {$bookingType}<br>
+                        <strong>Status:</strong> Cancelled
+                    </div>
+                    {$reasonHTML}
+                    <p>If you would like to reschedule, please submit a new booking request.</p>
+                    <p style='text-align: center;'>
+                        <a href='" . BASE_URL . "/client/dashboard.php' class='button'>View Your Bookings</a>
+                    </p>
+                </div>
+                <div class='footer'>
+                    <p>&copy; 2026 Parish Church. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+    
+    private function getPaymentVerifiedTemplate($firstName, $transactionId, $amount, $notes = '') {
+        $formattedAmount = number_format($amount, 2);
+        $notesHTML = !empty($notes) ? "<p><strong>Verification Notes:</strong><br>{$notes}</p>" : '';
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #10b981; color: white; padding: 20px; text-align: center; }
+                .content { background: #f9f9f9; padding: 30px; }
+                .info-box { background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; }
+                .button { display: inline-block; padding: 12px 30px; background: #10b981; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>Payment Verified ✓</h1>
+                </div>
+                <div class='content'>
+                    <h2>Hello, {$firstName}!</h2>
+                    <p>Your payment has been <strong>verified and confirmed</strong>.</p>
+                    <div class='info-box'>
+                        <strong>Transaction ID:</strong> {$transactionId}<br>
+                        <strong>Amount:</strong> ₱{$formattedAmount}<br>
+                        <strong>Status:</strong> Verified
+                    </div>
+                    {$notesHTML}
+                    <p>Thank you for your payment. Your document/booking will be processed accordingly.</p>
+                    <p style='text-align: center;'>
+                        <a href='" . BASE_URL . "/client/dashboard.php' class='button'>View Transaction Details</a>
+                    </p>
+                </div>
+                <div class='footer'>
+                    <p>&copy; 2026 Parish Church. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+    
+    private function getPaymentRejectedTemplate($firstName, $transactionId, $amount, $reason = '') {
+        $formattedAmount = number_format($amount, 2);
+        $reasonHTML = !empty($reason) ? "<p><strong>Rejection Reason:</strong><br>{$reason}</p>" : '';
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #ef4444; color: white; padding: 20px; text-align: center; }
+                .content { background: #f9f9f9; padding: 30px; }
+                .info-box { background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; }
+                .button { display: inline-block; padding: 12px 30px; background: #ef4444; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>Payment Rejected</h1>
+                </div>
+                <div class='content'>
+                    <h2>Hello, {$firstName}!</h2>
+                    <p>Unfortunately, your payment could not be verified.</p>
+                    <div class='info-box'>
+                        <strong>Transaction ID:</strong> {$transactionId}<br>
+                        <strong>Amount:</strong> ₱{$formattedAmount}<br>
+                        <strong>Status:</strong> Rejected
+                    </div>
+                    {$reasonHTML}
+                    <p>Please review the details and try submitting your payment again. Contact the church office if you need assistance.</p>
+                    <p style='text-align: center;'>
+                        <a href='" . BASE_URL . "/client/dashboard.php' class='button'>View Transaction Details</a>
+                    </p>
+                </div>
+                <div class='footer'>
+                    <p>&copy; 2026 Parish Church. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+    
     public function __destruct() {
         closeDBConnection($this->conn);
     }

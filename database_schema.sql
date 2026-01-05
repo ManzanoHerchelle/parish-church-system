@@ -54,7 +54,12 @@ CREATE TABLE document_requests (
     processed_by INT,
     processed_date DATETIME,
     rejection_reason TEXT,
+    staff_notes TEXT,
     document_file VARCHAR(255),
+    target_completion_date DATETIME,
+    is_overdue TINYINT(1) DEFAULT 0,
+    client_notified TINYINT(1) DEFAULT 0,
+    client_notification_sent_at DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -62,7 +67,9 @@ CREATE TABLE document_requests (
     FOREIGN KEY (processed_by) REFERENCES users(id),
     INDEX idx_user_id (user_id),
     INDEX idx_status (status),
-    INDEX idx_reference (reference_number)
+    INDEX idx_reference (reference_number),
+    INDEX idx_is_overdue (is_overdue),
+    INDEX idx_target_date (target_completion_date)
 ) ENGINE=InnoDB;
 
 -- Document Request Attachments Table
@@ -96,27 +103,32 @@ CREATE TABLE bookings (
     user_id INT NOT NULL,
     booking_type_id INT NOT NULL,
     reference_number VARCHAR(50) UNIQUE NOT NULL,
-    booking_date DATE NOT NULL,
-    booking_time TIME NOT NULL,
-    end_time TIME,
+    appointment_date DATETIME NOT NULL,
+    end_time DATETIME,
     purpose TEXT,
     special_requests TEXT,
-    status ENUM('pending', 'approved', 'rejected', 'completed', 'cancelled') DEFAULT 'pending',
+    status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
     payment_status ENUM('unpaid', 'pending', 'paid') DEFAULT 'unpaid',
     payment_amount DECIMAL(10, 2),
     payment_proof VARCHAR(255),
     approved_by INT,
     approved_date DATETIME,
-    rejection_reason TEXT,
+    staff_notes TEXT,
     cancellation_reason TEXT,
+    target_completion_date DATETIME,
+    is_overdue TINYINT(1) DEFAULT 0,
+    client_notified TINYINT(1) DEFAULT 0,
+    client_notification_sent_at DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (booking_type_id) REFERENCES booking_types(id),
     FOREIGN KEY (approved_by) REFERENCES users(id),
     INDEX idx_user_id (user_id),
-    INDEX idx_booking_date (booking_date),
-    INDEX idx_status (status)
+    INDEX idx_appointment_date (appointment_date),
+    INDEX idx_status (status),
+    INDEX idx_is_overdue (is_overdue),
+    INDEX idx_target_date (target_completion_date)
 ) ENGINE=InnoDB;
 
 -- Blocked Dates Table (for holidays and special events)
@@ -146,6 +158,11 @@ CREATE TABLE payments (
     status ENUM('pending', 'verified', 'rejected') DEFAULT 'pending',
     verified_by INT,
     verified_date DATETIME,
+    verification_notes TEXT,
+    target_verification_date DATETIME,
+    is_overdue TINYINT(1) DEFAULT 0,
+    client_notified TINYINT(1) DEFAULT 0,
+    client_notification_sent_at DATETIME,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -153,7 +170,9 @@ CREATE TABLE payments (
     FOREIGN KEY (verified_by) REFERENCES users(id),
     INDEX idx_user_id (user_id),
     INDEX idx_status (status),
-    INDEX idx_transaction (transaction_number)
+    INDEX idx_transaction (transaction_number),
+    INDEX idx_is_overdue (is_overdue),
+    INDEX idx_target_date (target_verification_date)
 ) ENGINE=InnoDB;
 
 -- Notifications Table
@@ -186,13 +205,53 @@ CREATE TABLE activity_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     action VARCHAR(255) NOT NULL,
+    entity_type VARCHAR(100),
+    entity_id INT,
     description TEXT,
+    changes TEXT,
     ip_address VARCHAR(45),
     user_agent TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_user_id (user_id),
-    INDEX idx_created_at (created_at)
+    INDEX idx_created_at (created_at),
+    INDEX idx_action (action),
+    INDEX idx_entity (entity_type, entity_id)
+) ENGINE=InnoDB;
+
+-- Staff Absences Table
+CREATE TABLE staff_absences (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    reason VARCHAR(255),
+    is_approved TINYINT(1) DEFAULT 1,
+    approved_by INT,
+    approved_date DATETIME,
+    reassign_to INT,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (staff_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES users(id),
+    FOREIGN KEY (reassign_to) REFERENCES users(id),
+    INDEX idx_staff_id (staff_id),
+    INDEX idx_dates (start_date, end_date),
+    INDEX idx_approved (is_approved)
+) ENGINE=InnoDB;
+
+-- Certificates Table
+CREATE TABLE certificates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    document_request_id INT NOT NULL UNIQUE,
+    certificate_file VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    issued_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (document_request_id) REFERENCES document_requests(id) ON DELETE CASCADE,
+    INDEX idx_document_id (document_request_id)
 ) ENGINE=InnoDB;
 
 -- Insert Default Document Types

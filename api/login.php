@@ -46,8 +46,19 @@ try {
     
     $user = $result->fetch_assoc();
     
-    // Verify password
-    if (!password_verify($password, $user['password'])) {
+    // Verify password - support both SHA2-256 and bcrypt
+    $password_verified = false;
+    
+    // Try SHA2-256 first
+    if ($user['password'] === hash('sha256', $password)) {
+        $password_verified = true;
+    }
+    // Fall back to bcrypt
+    elseif (password_verify($password, $user['password'])) {
+        $password_verified = true;
+    }
+    
+    if (!$password_verified) {
         throw new Exception('Invalid email or password.');
     }
     

@@ -7,17 +7,22 @@ A web-based system for managing document requests and bookings for parish church
 ### Client Side
 - Document requests (Baptismal, Confirmation, Marriage, Death certificates, etc.)
 - Booking system (Baptism, Wedding, Mass intentions, etc.)
+- Online payment processing (GCash, PayMaya)
 - Payment proof upload
 - Request tracking
 - Email notifications
+- PDF certificate downloads
 
 ### Admin Side
 - Dashboard with statistics
 - Document request management
 - Booking management
 - User management
-- Payment verification
+- Payment verification & gateway integration
 - Reports and analytics
+- Advanced search & filters
+- Online payment gateway configuration
+- Transaction monitoring
 
 ## Tech Stack
 - **Backend:** PHP, MySQL
@@ -61,13 +66,19 @@ A web-based system for managing document requests and bookings for parish church
      - Generate App Password from Google Account
      - Update `SMTP_USERNAME` and `SMTP_PASSWORD`
 
-5. **Set permissions** (if on Linux/Mac)
+5. **Configure payment gateways** (Optional - for online payments)
+   - Go to Admin → Settings → Payment Gateway Configuration
+   - Add GCash API credentials (optional)
+   - Add PayMaya API credentials (optional)
+   - See `PAYMENT_GATEWAY_SETUP.md` for detailed setup
+
+6. **Set permissions** (if on Linux/Mac)
    ```bash
    chmod 755 uploads/
    chmod 755 uploads/documents uploads/payments uploads/attachments
    ```
 
-6. **Start XAMPP**
+7. **Start XAMPP**
    - Start Apache and MySQL
    - Access: `http://localhost/documentSystem`
 
@@ -80,14 +91,18 @@ A web-based system for managing document requests and bookings for parish church
 ```
 documentSystem/
 ├── admin/              # Admin dashboard pages
-├── client/             # Client-facing pages
-├── api/                # REST API endpoints
-├── handlers/           # Business logic
+│   └── settings/       # Admin settings including payment gateway config
+├── client/             # Client-facing pages (includes checkout)
+├── api/                # REST API endpoints (includes payment webhooks)
+├── src/
+│   └── Services/       # Business logic services (PaymentGatewayService, etc.)
+├── handlers/           # Business logic handlers
 ├── config/             # Configuration files
 ├── includes/           # Shared components
 ├── assets/             # CSS, JS, images
 ├── uploads/            # User uploads
-└── database_schema.sql # Database structure
+├── PAYMENT_GATEWAY_SETUP.md  # Payment gateway configuration guide
+└── database_schema.sql       # Database structure
 ```
 
 ## Security Notes
