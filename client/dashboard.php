@@ -220,6 +220,9 @@ $isOpen = ($currentDay >= 1 && $currentDay <= 6) && ($currentHour >= 9 && $curre
         <a href="/documentSystem/client/view-documents.php" class="nav-link">
           <i class="bi bi-file-earmark-check"></i>
           <span>View Documents</span>
+          <?php if ($stats['pending_documents'] > 0): ?>
+            <span class="nav-badge"><?php echo $stats['pending_documents']; ?></span>
+          <?php endif; ?>
         </a>
       </li>
       <li class="nav-item">

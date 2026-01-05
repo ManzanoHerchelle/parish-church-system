@@ -51,4 +51,7 @@ if (isLoggedIn()) {
     
     closeDBConnection($conn);
 }
+
+// Also set as $stats for backward compatibility with dashboard
+$stats = $navStats;
 ?>
