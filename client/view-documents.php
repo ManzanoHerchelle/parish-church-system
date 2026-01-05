@@ -35,6 +35,20 @@ $documentsResult = $stmt->get_result();
 $documents = $documentsResult->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+// Get active payment methods
+$paymentMethods = $conn->query("SELECT id, code, display_name FROM payment_methods WHERE is_active = 1 ORDER BY sort_order")->fetch_all(MYSQLI_ASSOC);
+
+// Get payment accounts organized by method
+$paymentAccountsResult = $conn->query("SELECT pa.*, pm.code as method_code FROM payment_accounts pa JOIN payment_methods pm ON pa.payment_method_id = pm.id WHERE pa.is_active = 1 ORDER BY pm.sort_order, pa.sort_order");
+$paymentAccounts = [];
+while ($row = $paymentAccountsResult->fetch_assoc()) {
+    $methodCode = $row['method_code'];
+    if (!isset($paymentAccounts[$methodCode])) {
+        $paymentAccounts[$methodCode] = [];
+    }
+    $paymentAccounts[$methodCode][] = $row;
+}
+
 // Get user initials
 $nameParts = explode(' ', $userName);
 $userInitials = strtoupper(
@@ -329,28 +343,22 @@ function getPaymentStatusBadge($status) {
 
             <div class="alert alert-warning" id="bankDetails" style="display: none;">
               <strong><i class="bi bi-bank"></i> Bank Transfer Details:</strong><br>
-              <div class="mt-2" style="font-size: 14px;">
-                <strong>Bank:</strong> BDO<br>
-                <strong>Account Name:</strong> Parish Church<br>
-                <strong>Account Number:</strong> 1234567890
+              <div class="mt-2" style="font-size: 14px;" id="bankDetailsContent">
+                <!-- Populated by JavaScript -->
               </div>
             </div>
 
             <div class="alert alert-success" id="gcashDetails" style="display: none;">
               <strong><i class="bi bi-wallet2"></i> GCash Details:</strong><br>
-              <div class="mt-2" style="font-size: 14px;">
-                <strong>Account Name:</strong> Parish Church<br>
-                <strong>Mobile Number:</strong> 0999-123-4567<br>
-                <strong>Note:</strong> Send to this number and upload screenshot
+              <div class="mt-2" style="font-size: 14px;" id="gcashDetailsContent">
+                <!-- Populated by JavaScript -->
               </div>
             </div>
 
             <div class="alert alert-info" id="paymayaDetails" style="display: none;">
               <strong><i class="bi bi-credit-card-2-front"></i> PayMaya Details:</strong><br>
-              <div class="mt-2" style="font-size: 14px;">
-                <strong>Account Name:</strong> Parish Church<br>
-                <strong>Mobile Number:</strong> 0999-765-4321<br>
-                <strong>Note:</strong> Send to this number and upload screenshot
+              <div class="mt-2" style="font-size: 14px;" id="paymayaDetailsContent">
+                <!-- Populated by JavaScript -->
               </div>
             </div>
 
@@ -368,10 +376,9 @@ function getPaymentStatusBadge($status) {
               <label for="payment_method" class="form-label">Payment Method <span class="text-danger">*</span></label>
               <select class="form-select" id="payment_method" name="payment_method" required onchange="showPaymentDetails()">
                 <option value="">-- Select Method --</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="gcash">GCash</option>
-                <option value="paymaya">PayMaya</option>
-                <option value="over_counter">Over the Counter</option>
+                <?php foreach ($paymentMethods as $pm): ?>
+                  <option value="<?php echo htmlspecialchars($pm['code']); ?>"><?php echo htmlspecialchars($pm['display_name']); ?></option>
+                <?php endforeach; ?>
               </select>
             </div>
 
@@ -693,6 +700,60 @@ function getPaymentStatusBadge($status) {
       // Show the modal
       const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
       modal.show();
+    }
+
+    // Payment account details data
+    const paymentAccountsData = <?php echo json_encode($paymentAccounts); ?>;
+
+    // Function to populate payment account details
+    function showPaymentDetails() {
+      const method = document.getElementById('payment_method').value;
+      
+      // Hide all detail sections
+      document.getElementById('bankDetails').style.display = 'none';
+      document.getElementById('gcashDetails').style.display = 'none';
+      document.getElementById('paymayaDetails').style.display = 'none';
+      document.getElementById('counterDetails').style.display = 'none';
+      
+      if (!method) return;
+      
+      // Show the appropriate section and populate with account details
+      if (method === 'bank_transfer' && paymentAccountsData['bank_transfer']) {
+        const accounts = paymentAccountsData['bank_transfer'];
+        let html = '';
+        accounts.forEach(acc => {
+          html += `<strong>${acc.account_name}:</strong><br>
+                   <strong>Account Number:</strong> ${acc.account_number}<br>
+                   <strong>Account Holder:</strong> ${acc.account_holder}`;
+          if (acc.branch_name) html += `<br><strong>Branch:</strong> ${acc.branch_name}`;
+          if (acc.instructions) html += `<br><strong>Instructions:</strong> ${acc.instructions}`;
+          html += '<br><br>';
+        });
+        document.getElementById('bankDetailsContent').innerHTML = html;
+        document.getElementById('bankDetails').style.display = 'block';
+      } else if (method === 'gcash' && paymentAccountsData['gcash']) {
+        const accounts = paymentAccountsData['gcash'];
+        let html = '';
+        accounts.forEach(acc => {
+          html += `<strong>Account Name:</strong> ${acc.account_number}<br>`;
+          if (acc.instructions) html += `<strong>Note:</strong> ${acc.instructions}<br>`;
+        });
+        document.getElementById('gcashDetailsContent').innerHTML = html;
+        document.getElementById('gcashDetails').style.display = 'block';
+      } else if (method === 'paymaya' && paymentAccountsData['paymaya']) {
+        const accounts = paymentAccountsData['paymaya'];
+        let html = '';
+        accounts.forEach(acc => {
+          html += `<strong>Account Name:</strong> ${acc.account_number}<br>`;
+          if (acc.instructions) html += `<strong>Note:</strong> ${acc.instructions}<br>`;
+        });
+        document.getElementById('paymayaDetailsContent').innerHTML = html;
+        document.getElementById('paymayaDetails').style.display = 'block';
+      } else if (method === 'over_counter') {
+        document.getElementById('counterDetails').style.display = 'block';
+      } else if (method === 'cash') {
+        document.getElementById('counterDetails').style.display = 'block';
+      }
     }
   </script>
 </body>

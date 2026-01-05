@@ -76,6 +76,20 @@ $bookingsResult = $stmt->get_result();
 $bookings = $bookingsResult->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+// Get active payment methods
+$paymentMethods = $conn->query("SELECT id, code, display_name FROM payment_methods WHERE is_active = 1 ORDER BY sort_order")->fetch_all(MYSQLI_ASSOC);
+
+// Get payment accounts organized by method
+$paymentAccountsResult = $conn->query("SELECT pa.*, pm.code as method_code FROM payment_accounts pa JOIN payment_methods pm ON pa.payment_method_id = pm.id WHERE pa.is_active = 1 ORDER BY pm.sort_order, pa.sort_order");
+$paymentAccounts = [];
+while ($row = $paymentAccountsResult->fetch_assoc()) {
+    $methodCode = $row['method_code'];
+    if (!isset($paymentAccounts[$methodCode])) {
+        $paymentAccounts[$methodCode] = [];
+    }
+    $paymentAccounts[$methodCode][] = $row;
+}
+
 // Separate upcoming and past bookings
 $upcomingBookings = array_filter($bookings, function($b) {
     return strtotime($b['booking_date']) >= strtotime('today') && $b['status'] !== 'cancelled';
@@ -417,35 +431,30 @@ function getPaymentStatusBadge($status) {
               <label class="form-label"><i class="bi bi-wallet2"></i> Payment Method *</label>
               <select name="payment_method" id="appointment_payment_method" class="form-control" required onchange="showAppointmentPaymentDetails()">
                 <option value="">-- Select Payment Method --</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="gcash">GCash</option>
-                <option value="paymaya">PayMaya</option>
-                <option value="over_counter">Pay at Office (Cash)</option>
+                <?php foreach ($paymentMethods as $pm): ?>
+                  <option value="<?php echo htmlspecialchars($pm['code']); ?>"><?php echo htmlspecialchars($pm['display_name']); ?></option>
+                <?php endforeach; ?>
               </select>
             </div>
 
             <!-- Payment Details for Bank Transfer -->
             <div class="alert alert-warning" id="appointmentBankDetails" style="display: none;">
               <strong><i class="bi bi-bank"></i> Bank Transfer Details:</strong><br>
-              <strong>Bank:</strong> BDO<br>
-              <strong>Account Number:</strong> 1234567890<br>
-              <strong>Account Name:</strong> Parish Church<br>
+              <div id="appointmentBankDetailsContent"><!-- Populated by JavaScript --></div>
               <small class="text-muted">Please save your transaction receipt.</small>
             </div>
 
             <!-- Payment Details for GCash -->
             <div class="alert alert-success" id="appointmentGcashDetails" style="display: none;">
               <strong><i class="bi bi-phone"></i> GCash Payment Details:</strong><br>
-              <strong>Mobile Number:</strong> 0999-123-4567<br>
-              <strong>Account Name:</strong> Parish Church<br>
+              <div id="appointmentGcashDetailsContent"><!-- Populated by JavaScript --></div>
               <small class="text-muted">Please save your transaction receipt.</small>
             </div>
 
             <!-- Payment Details for PayMaya -->
             <div class="alert alert-info" id="appointmentPaymayaDetails" style="display: none;">
               <strong><i class="bi bi-phone"></i> PayMaya Payment Details:</strong><br>
-              <strong>Mobile Number:</strong> 0999-765-4321<br>
-              <strong>Account Name:</strong> Parish Church<br>
+              <div id="appointmentPaymayaDetailsContent"><!-- Populated by JavaScript --></div>
               <small class="text-muted">Please save your transaction receipt.</small>
             </div>
 
@@ -507,6 +516,9 @@ function getPaymentStatusBadge($status) {
       modal.show();
     }
 
+    // Payment account details data
+    const appointmentPaymentAccountsData = <?php echo json_encode($paymentAccounts); ?>;
+
     // Show payment details based on selected method
     function showAppointmentPaymentDetails() {
       const method = document.getElementById('appointment_payment_method').value;
@@ -525,6 +537,19 @@ function getPaymentStatusBadge($status) {
       
       // Show selected payment method details and set file upload requirement
       if (method === 'bank_transfer') {
+        const accounts = appointmentPaymentAccountsData['bank_transfer'];
+        let html = '';
+        if (accounts) {
+          accounts.forEach(acc => {
+            html += `<strong>${acc.account_name}:</strong><br>
+                     <strong>Account Number:</strong> ${acc.account_number}<br>
+                     <strong>Account Holder:</strong> ${acc.account_holder}`;
+            if (acc.branch_name) html += `<br><strong>Branch:</strong> ${acc.branch_name}`;
+            if (acc.instructions) html += `<br><strong>Instructions:</strong> ${acc.instructions}`;
+            html += '<br><br>';
+          });
+        }
+        document.getElementById('appointmentBankDetailsContent').innerHTML = html;
         document.getElementById('appointmentBankDetails').style.display = 'block';
         proofFile.required = true;
         proofFile.disabled = false;
@@ -537,6 +562,15 @@ function getPaymentStatusBadge($status) {
         refRequired.style.display = 'inline';
         refNote.innerHTML = 'Enter the reference/transaction number from your bank receipt';
       } else if (method === 'gcash') {
+        const accounts = appointmentPaymentAccountsData['gcash'];
+        let html = '';
+        if (accounts) {
+          accounts.forEach(acc => {
+            html += `<strong>Mobile Number:</strong> ${acc.account_number}<br>`;
+            if (acc.instructions) html += `<strong>Note:</strong> ${acc.instructions}<br>`;
+          });
+        }
+        document.getElementById('appointmentGcashDetailsContent').innerHTML = html;
         document.getElementById('appointmentGcashDetails').style.display = 'block';
         proofFile.required = true;
         proofFile.disabled = false;
@@ -547,8 +581,17 @@ function getPaymentStatusBadge($status) {
         transactionRef.disabled = false;
         transactionRef.style.backgroundColor = '';
         refRequired.style.display = 'inline';
-        refNote.innerHTML = 'Enter the reference number from your GCash transaction';
+        refNote.innerHTML = 'Enter the reference/transaction number from your G-Cash receipt';
       } else if (method === 'paymaya') {
+        const accounts = appointmentPaymentAccountsData['paymaya'];
+        let html = '';
+        if (accounts) {
+          accounts.forEach(acc => {
+            html += `<strong>Account:</strong> ${acc.account_number}<br>`;
+            if (acc.instructions) html += `<strong>Note:</strong> ${acc.instructions}<br>`;
+          });
+        }
+        document.getElementById('appointmentPaymayaDetailsContent').innerHTML = html;
         document.getElementById('appointmentPaymayaDetails').style.display = 'block';
         proofFile.required = true;
         proofFile.disabled = false;
@@ -559,8 +602,8 @@ function getPaymentStatusBadge($status) {
         transactionRef.disabled = false;
         transactionRef.style.backgroundColor = '';
         refRequired.style.display = 'inline';
-        refNote.innerHTML = 'Enter the reference number from your PayMaya transaction';
-      } else if (method === 'over_counter') {
+        refNote.innerHTML = 'Enter the reference/transaction number from your PayMaya receipt';
+      } else if (method === 'cash' || method === 'over_counter') {
         document.getElementById('appointmentCounterDetails').style.display = 'block';
         proofFile.required = false;
         proofFile.disabled = true;
