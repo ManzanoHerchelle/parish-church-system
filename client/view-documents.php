@@ -710,7 +710,8 @@ function getPaymentStatusBadge($status) {
       const method = document.getElementById('payment_method').value;
       const transactionRefField = document.getElementById('transaction_reference');
       const paymentProofField = document.getElementById('payment_proof');
-      const paymentProofLabel = paymentProofField.closest('.mb-3').querySelector('.form-label');
+      const transactionRefContainer = transactionRefField.closest('.mb-3');
+      const paymentProofContainer = paymentProofField.closest('.mb-3');
       
       // Hide all detail sections
       document.getElementById('bankDetails').style.display = 'none';
@@ -719,9 +720,11 @@ function getPaymentStatusBadge($status) {
       document.getElementById('counterDetails').style.display = 'none';
       
       if (!method) {
-        // Reset to required when no method selected
+        // When no method selected, keep fields visible (not hidden)
         transactionRefField.required = false;
+        transactionRefContainer.style.display = 'block';
         paymentProofField.required = true;
+        paymentProofContainer.style.display = 'block';
         return;
       }
       
@@ -729,17 +732,17 @@ function getPaymentStatusBadge($status) {
       if (method === 'over_counter' || method === 'cash') {
         document.getElementById('counterDetails').style.display = 'block';
         transactionRefField.required = false;
-        transactionRefField.parentElement.style.display = 'none';
+        transactionRefContainer.style.display = 'none';
         paymentProofField.required = false;
-        paymentProofField.parentElement.parentElement.style.display = 'none';
+        paymentProofContainer.style.display = 'none';
         return;
       }
       
       // For online payments, require reference and proof
       transactionRefField.required = true;
-      transactionRefField.parentElement.style.display = 'block';
+      transactionRefContainer.style.display = 'block';
       paymentProofField.required = true;
-      paymentProofField.parentElement.parentElement.style.display = 'block';
+      paymentProofContainer.style.display = 'block';
       
       // Show the appropriate section and populate with account details
       if (method === 'bank_transfer' && paymentAccountsData['bank_transfer']) {
