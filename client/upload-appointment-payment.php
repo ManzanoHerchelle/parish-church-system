@@ -36,8 +36,8 @@ $paymentMethod = $_POST['payment_method'] ?? '';
 $transactionNumber = $_POST['transaction_number'] ?? '';
 $notes = $_POST['notes'] ?? '';
 
-// Generate transaction number for cash payments (they don't have one yet)
-if ($paymentMethod === 'over_counter' && empty($transactionNumber)) {
+// Generate transaction number for cash/over_counter payments (they don't have one yet)
+if (empty($transactionNumber) && ($paymentMethod === 'over_counter' || $paymentMethod === 'cash')) {
     $transactionNumber = 'CASH-' . strtoupper(substr(md5(uniqid()), 0, 8)) . '-' . time();
 }
 

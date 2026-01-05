@@ -265,6 +265,13 @@ function formatHours($hours) {
       </li>
 
       <li class="nav-item">
+        <a href="/documentSystem/admin/manage-logos.php" class="nav-link">
+          <i class="bi bi-image"></i>
+          <span>Manage Logos</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
         <a href="/documentSystem/admin/system-settings.php" class="nav-link">
           <i class="bi bi-gear"></i>
           <span>System Settings</span>
@@ -363,6 +370,10 @@ function formatHours($hours) {
           <a href="/documentSystem/admin/manage-payments.php" class="action-btn">
             <i class="bi bi-credit-card"></i>
             <span>Verify Payments</span>
+          </a>
+          <a href="/documentSystem/admin/manage-logos.php" class="action-btn">
+            <i class="bi bi-image"></i>
+            <span>Manage Logos</span>
           </a>
           <a href="/documentSystem/admin/system-settings.php" class="action-btn">
             <i class="bi bi-gear"></i>

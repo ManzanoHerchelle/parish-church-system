@@ -128,9 +128,9 @@ $paymentCheckStmt->execute();
 $paymentExists = $paymentCheckStmt->get_result()->fetch_assoc();
 $paymentCheckStmt->close();
 
-// Auto-generate transaction ref for over_counter if missing
-if (empty($transactionReference) && $paymentMethod === 'over_counter') {
-    $transactionReference = 'OTC-' . strtoupper(substr(md5(uniqid()), 0, 8)) . '-' . time();
+// Auto-generate transaction ref for cash/over_counter payments if missing
+if (empty($transactionReference) && ($paymentMethod === 'over_counter' || $paymentMethod === 'cash')) {
+    $transactionReference = 'CASH-' . strtoupper(substr(md5(uniqid()), 0, 8)) . '-' . time();
 }
 
 if ($paymentExists) {

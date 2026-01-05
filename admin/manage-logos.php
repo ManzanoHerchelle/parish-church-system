@@ -1,0 +1,448 @@
+<?php
+/**
+ * Admin: Manage System Logos
+ * Upload, edit, delete, and archive system logos
+ */
+
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../src/UI/Layouts/AdminLayout.php';
+
+startSecureSession();
+
+// Check if user is logged in and is admin
+$userRole = $_SESSION['user_role'] ?? 'guest';
+if (!isset($_SESSION['user_id']) || $userRole !== 'admin') {
+    header('Location: /documentSystem/client/login.php');
+    exit;
+}
+
+$conn = getDBConnection();
+$statusMessage = '';
+$statusType = 'success';
+$userId = $_SESSION['user_id'];
+
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    switch ($action) {
+        case 'upload_logo':
+            if (!isset($_FILES['logo_image']) || $_FILES['logo_image']['error'] !== UPLOAD_ERR_OK) {
+                $statusMessage = 'Please select a valid image file';
+                $statusType = 'error';
+                break;
+            }
+            
+            $name = trim($_POST['logo_name']);
+            $alt_text = trim($_POST['alt_text']);
+            $description = trim($_POST['logo_description']);
+            
+            if (empty($name)) {
+                $statusMessage = 'Logo name is required';
+                $statusType = 'error';
+                break;
+            }
+            
+            // Validate file
+            $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+            $maxSize = 10 * 1024 * 1024; // 10MB
+            
+            $fileType = $_FILES['logo_image']['type'];
+            $fileSize = $_FILES['logo_image']['size'];
+            
+            if (!in_array($fileType, $allowedTypes)) {
+                $statusMessage = 'Invalid file type. Only JPG, PNG, GIF, WebP, and SVG are allowed';
+                $statusType = 'error';
+                break;
+            }
+            
+            if ($fileSize > $maxSize) {
+                $statusMessage = 'File too large. Maximum size is 10MB';
+                $statusType = 'error';
+                break;
+            }
+            
+            // Create upload directory
+            $uploadDir = __DIR__ . '/../uploads/logos/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            // Generate unique filename
+            $extension = pathinfo($_FILES['logo_image']['name'], PATHINFO_EXTENSION);
+            $fileName = 'logo_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+            $targetPath = $uploadDir . $fileName;
+            
+            if (!move_uploaded_file($_FILES['logo_image']['tmp_name'], $targetPath)) {
+                $statusMessage = 'Failed to upload file. Please try again';
+                $statusType = 'error';
+                break;
+            }
+            
+            $relativeFilePath = 'uploads/logos/' . $fileName;
+            
+            // Insert into database
+            $stmt = $conn->prepare("INSERT INTO system_logos (name, file_path, alt_text, description, created_by) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param('ssssi', $name, $relativeFilePath, $alt_text, $description, $userId);
+            
+            if ($stmt->execute()) {
+                $statusMessage = 'Logo uploaded successfully';
+                $statusType = 'success';
+            } else {
+                $statusMessage = 'Failed to save logo to database: ' . $stmt->error;
+                $statusType = 'error';
+            }
+            $stmt->close();
+            break;
+            
+        case 'edit_logo':
+            $logoId = intval($_POST['logo_id']);
+            $name = trim($_POST['logo_name']);
+            $alt_text = trim($_POST['alt_text']);
+            $description = trim($_POST['logo_description']);
+            
+            if (empty($name)) {
+                $statusMessage = 'Logo name is required';
+                $statusType = 'error';
+                break;
+            }
+            
+            $stmt = $conn->prepare("UPDATE system_logos SET name = ?, alt_text = ?, description = ?, updated_at = NOW() WHERE id = ?");
+            $stmt->bind_param('sssi', $name, $alt_text, $description, $logoId);
+            
+            if ($stmt->execute()) {
+                $statusMessage = 'Logo updated successfully';
+                $statusType = 'success';
+            } else {
+                $statusMessage = 'Failed to update logo: ' . $stmt->error;
+                $statusType = 'error';
+            }
+            $stmt->close();
+            break;
+            
+        case 'set_active_logo':
+            $logoId = intval($_POST['logo_id']);
+            
+            // Deactivate all other logos first
+            $conn->query("UPDATE system_logos SET is_active = 0 WHERE is_archived = 0");
+            
+            // Activate this logo
+            $stmt = $conn->prepare("UPDATE system_logos SET is_active = 1, updated_at = NOW() WHERE id = ?");
+            $stmt->bind_param('i', $logoId);
+            
+            if ($stmt->execute()) {
+                $statusMessage = 'Logo set as active';
+                $statusType = 'success';
+            } else {
+                $statusMessage = 'Failed to set active logo: ' . $stmt->error;
+                $statusType = 'error';
+            }
+            $stmt->close();
+            break;
+            
+        case 'archive_logo':
+            $logoId = intval($_POST['logo_id']);
+            
+            $stmt = $conn->prepare("UPDATE system_logos SET is_archived = 1, is_active = 0, updated_at = NOW() WHERE id = ?");
+            $stmt->bind_param('i', $logoId);
+            
+            if ($stmt->execute()) {
+                $statusMessage = 'Logo archived successfully';
+                $statusType = 'success';
+            } else {
+                $statusMessage = 'Failed to archive logo: ' . $stmt->error;
+                $statusType = 'error';
+            }
+            $stmt->close();
+            break;
+            
+        case 'restore_logo':
+            $logoId = intval($_POST['logo_id']);
+            
+            $stmt = $conn->prepare("UPDATE system_logos SET is_archived = 0, updated_at = NOW() WHERE id = ?");
+            $stmt->bind_param('i', $logoId);
+            
+            if ($stmt->execute()) {
+                $statusMessage = 'Logo restored successfully';
+                $statusType = 'success';
+            } else {
+                $statusMessage = 'Failed to restore logo: ' . $stmt->error;
+                $statusType = 'error';
+            }
+            $stmt->close();
+            break;
+            
+        case 'delete_logo':
+            $logoId = intval($_POST['logo_id']);
+            
+            // Get file path
+            $result = $conn->query("SELECT file_path FROM system_logos WHERE id = $logoId");
+            $logo = $result->fetch_assoc();
+            
+            if ($logo && file_exists(__DIR__ . '/../' . $logo['file_path'])) {
+                unlink(__DIR__ . '/../' . $logo['file_path']);
+            }
+            
+            // Delete from database
+            $stmt = $conn->prepare("DELETE FROM system_logos WHERE id = ?");
+            $stmt->bind_param('i', $logoId);
+            
+            if ($stmt->execute()) {
+                $statusMessage = 'Logo deleted successfully';
+                $statusType = 'success';
+            } else {
+                $statusMessage = 'Failed to delete logo: ' . $stmt->error;
+                $statusType = 'error';
+            }
+            $stmt->close();
+            break;
+    }
+}
+
+// Get all logos
+$logosResult = $conn->query("SELECT sl.*, u.first_name, u.last_name FROM system_logos sl JOIN users u ON sl.created_by = u.id ORDER BY sl.is_archived ASC, sl.is_active DESC, sl.display_order ASC");
+$logos = $logosResult->fetch_all(MYSQLI_ASSOC);
+
+renderAdminHeader('Manage Logos');
+?>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-4">Manage System Logos</h2>
+            
+            <?php if (!empty($statusMessage)): ?>
+                <div class="alert alert-<?php echo $statusType === 'success' ? 'success' : 'danger'; ?> alert-dismissible fade show" role="alert">
+                    <?php echo htmlspecialchars($statusMessage); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+    
+    <!-- Upload New Logo Form -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Upload New Logo</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="upload_logo">
+                        
+                        <div class="mb-3">
+                            <label for="logo_name" class="form-label">Logo Name *</label>
+                            <input type="text" class="form-control" id="logo_name" name="logo_name" required>
+                            <small class="form-text text-muted">e.g., Main Logo, Footer Logo, Header Logo</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="alt_text" class="form-label">Alt Text</label>
+                            <input type="text" class="form-control" id="alt_text" name="alt_text" placeholder="For accessibility">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="logo_description" class="form-label">Description</label>
+                            <textarea class="form-control" id="logo_description" name="logo_description" rows="3" placeholder="Optional description"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="logo_image" class="form-label">Image File *</label>
+                            <input type="file" class="form-control" id="logo_image" name="logo_image" accept="image/*" required>
+                            <small class="form-text text-muted">Supported formats: JPG, PNG, GIF, WebP, SVG. Max 10MB</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Upload Logo
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Logo Preview -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Preview</h5>
+                </div>
+                <div class="card-body text-center" id="previewContainer" style="min-height: 300px; display: flex; align-items: center; justify-content: center;">
+                    <p class="text-muted">Image preview will appear here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Logos List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">All Logos</h5>
+                </div>
+                <div class="card-body p-0">
+                    <?php if (empty($logos)): ?>
+                        <p class="text-muted p-4 mb-0">No logos uploaded yet</p>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Preview</th>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Created By</th>
+                                        <th>Created At</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($logos as $logo): ?>
+                                        <tr>
+                                            <td>
+                                                <img src="/documentSystem/<?php echo htmlspecialchars($logo['file_path']); ?>" 
+                                                     alt="<?php echo htmlspecialchars($logo['alt_text']); ?>" 
+                                                     style="max-width: 60px; max-height: 60px; object-fit: contain;">
+                                            </td>
+                                            <td>
+                                                <strong><?php echo htmlspecialchars($logo['name']); ?></strong>
+                                            </td>
+                                            <td>
+                                                <?php echo htmlspecialchars(substr($logo['description'], 0, 50)) . (strlen($logo['description']) > 50 ? '...' : ''); ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($logo['is_archived']): ?>
+                                                    <span class="badge bg-secondary">Archived</span>
+                                                <?php elseif ($logo['is_active']): ?>
+                                                    <span class="badge bg-success">Active</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-warning">Inactive</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php echo htmlspecialchars($logo['first_name'] . ' ' . $logo['last_name']); ?>
+                                            </td>
+                                            <td>
+                                                <?php echo date('M d, Y', strtotime($logo['created_at'])); ?>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" 
+                                                            data-bs-target="#editModal" 
+                                                            onclick="loadEditForm(<?php echo $logo['id']; ?>, '<?php echo htmlspecialchars($logo['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($logo['alt_text'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($logo['description'], ENT_QUOTES); ?>')">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    
+                                                    <?php if (!$logo['is_archived']): ?>
+                                                        <?php if (!$logo['is_active']): ?>
+                                                            <form method="POST" style="display: inline;">
+                                                                <input type="hidden" name="action" value="set_active_logo">
+                                                                <input type="hidden" name="logo_id" value="<?php echo $logo['id']; ?>">
+                                                                <button type="submit" class="btn btn-success" title="Set as Active">
+                                                                    <i class="fas fa-check"></i>
+                                                                </button>
+                                                            </form>
+                                                        <?php endif; ?>
+                                                        
+                                                        <form method="POST" style="display: inline;" onsubmit="return confirm('Archive this logo?');">
+                                                            <input type="hidden" name="action" value="archive_logo">
+                                                            <input type="hidden" name="logo_id" value="<?php echo $logo['id']; ?>">
+                                                            <button type="submit" class="btn btn-warning" title="Archive">
+                                                                <i class="fas fa-archive"></i>
+                                                            </button>
+                                                        </form>
+                                                    <?php else: ?>
+                                                        <form method="POST" style="display: inline;">
+                                                            <input type="hidden" name="action" value="restore_logo">
+                                                            <input type="hidden" name="logo_id" value="<?php echo $logo['id']; ?>">
+                                                            <button type="submit" class="btn btn-info" title="Restore">
+                                                                <i class="fas fa-undo"></i>
+                                                            </button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                    
+                                                    <form method="POST" style="display: inline;" onsubmit="return confirm('Delete this logo permanently?');">
+                                                        <input type="hidden" name="action" value="delete_logo">
+                                                        <input type="hidden" name="logo_id" value="<?php echo $logo['id']; ?>">
+                                                        <button type="submit" class="btn btn-danger" title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Logo Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Logo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="edit_logo">
+                    <input type="hidden" name="logo_id" id="edit_logo_id">
+                    
+                    <div class="mb-3">
+                        <label for="edit_logo_name" class="form-label">Logo Name *</label>
+                        <input type="text" class="form-control" id="edit_logo_name" name="logo_name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_alt_text" class="form-label">Alt Text</label>
+                        <input type="text" class="form-control" id="edit_alt_text" name="alt_text">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_logo_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_logo_description" name="logo_description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Image preview
+document.getElementById('logo_image')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewContainer = document.getElementById('previewContainer');
+            previewContainer.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 300px; object-fit: contain;">`;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Load edit form
+function loadEditForm(logoId, name, altText, description) {
+    document.getElementById('edit_logo_id').value = logoId;
+    document.getElementById('edit_logo_name').value = name;
+    document.getElementById('edit_alt_text').value = altText;
+    document.getElementById('edit_logo_description').value = description;
+}
+</script>
+
+<?php renderAdminFooter(); ?>

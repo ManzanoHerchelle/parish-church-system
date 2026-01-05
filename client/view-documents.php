@@ -507,8 +507,10 @@ function getPaymentStatusBadge($status) {
     // Show payment details based on selected method
     function showPaymentDetails() {
       const method = document.getElementById('payment_method').value;
-      const transactionRefContainer = document.getElementById('transaction_reference').closest('.mb-3');
-      const paymentProofContainer = document.getElementById('payment_proof').closest('.mb-3');
+      const transactionRef = document.getElementById('transaction_reference');
+      const proofFile = document.getElementById('payment_proof');
+      const transactionRefContainer = transactionRef.closest('.mb-3');
+      const paymentProofContainer = proofFile.closest('.mb-3');
       
       // Hide all payment details
       document.getElementById('bankDetails').style.display = 'none';
@@ -533,7 +535,13 @@ function getPaymentStatusBadge($status) {
         document.getElementById('bankDetailsContent').innerHTML = html;
         document.getElementById('bankDetails').style.display = 'block';
         transactionRefContainer.style.display = 'block';
+        transactionRef.disabled = false;
+        transactionRef.style.backgroundColor = '';
+        transactionRef.value = '';
         paymentProofContainer.style.display = 'block';
+        proofFile.disabled = false;
+        proofFile.style.backgroundColor = '';
+        proofFile.value = '';
       } else if (method === 'gcash' && paymentAccountsData['gcash']) {
         const accounts = paymentAccountsData['gcash'];
         let html = '';
@@ -544,7 +552,13 @@ function getPaymentStatusBadge($status) {
         document.getElementById('gcashDetailsContent').innerHTML = html;
         document.getElementById('gcashDetails').style.display = 'block';
         transactionRefContainer.style.display = 'block';
+        transactionRef.disabled = false;
+        transactionRef.style.backgroundColor = '';
+        transactionRef.value = '';
         paymentProofContainer.style.display = 'block';
+        proofFile.disabled = false;
+        proofFile.style.backgroundColor = '';
+        proofFile.value = '';
       } else if (method === 'paymaya' && paymentAccountsData['paymaya']) {
         const accounts = paymentAccountsData['paymaya'];
         let html = '';
@@ -555,11 +569,23 @@ function getPaymentStatusBadge($status) {
         document.getElementById('paymayaDetailsContent').innerHTML = html;
         document.getElementById('paymayaDetails').style.display = 'block';
         transactionRefContainer.style.display = 'block';
+        transactionRef.disabled = false;
+        transactionRef.style.backgroundColor = '';
+        transactionRef.value = '';
         paymentProofContainer.style.display = 'block';
+        proofFile.disabled = false;
+        proofFile.style.backgroundColor = '';
+        proofFile.value = '';
       } else if (method === 'cash' || method === 'over_counter') {
         document.getElementById('counterDetails').style.display = 'block';
-        transactionRefContainer.style.display = 'none';
-        paymentProofContainer.style.display = 'none';
+        transactionRefContainer.style.display = 'block';
+        transactionRef.disabled = true;
+        transactionRef.style.backgroundColor = '#f0f0f0';
+        transactionRef.value = '';
+        paymentProofContainer.style.display = 'block';
+        proofFile.disabled = true;
+        proofFile.style.backgroundColor = '#f0f0f0';
+        proofFile.value = '';
       }
     }
 
@@ -601,22 +627,6 @@ function getPaymentStatusBadge($status) {
         alert('File size must be less than 5MB');
         this.value = '';
       }
-    });
-
-    // Form submission validation
-    document.getElementById('paymentForm')?.addEventListener('submit', function(e) {
-      const method = document.getElementById('payment_method').value;
-      const proofFile = document.getElementById('payment_proof');
-      
-      // For non-cash payments, require file upload
-      if (method !== 'over_counter' && (!proofFile.files || proofFile.files.length === 0)) {
-        e.preventDefault();
-        alert('Please upload a payment proof file for the selected payment method.');
-        return false;
-      }
-      
-      // Form is valid, allow submission
-      return true;
     });
 
     // Tab switching function
