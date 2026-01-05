@@ -1,13 +1,9 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/client_nav_helper.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
-
-// Check if user role is client
+startSecureSession();
 if ($_SESSION['role'] !== 'client') {
     header('Location: ../admin/dashboard.php');
     exit;

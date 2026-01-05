@@ -5,6 +5,7 @@
 
 require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/client_nav_helper.php';
 
 startSecureSession();
 
@@ -125,8 +126,8 @@ function getPaymentStatusBadge($status) {
 
     <ul class="nav-menu">
       <li class="nav-item"><a href="/documentSystem/client/dashboard.php" class="nav-link"><i class="bi bi-house-door-fill"></i><span>Home</span></a></li>
-      <li class="nav-item"><a href="/documentSystem/client/view-documents.php" class="nav-link active"><i class="bi bi-file-earmark-check"></i><span>View Documents</span></a></li>
-      <li class="nav-item"><a href="/documentSystem/client/view-appointments.php" class="nav-link"><i class="bi bi-calendar-check"></i><span>View Appointments</span></a></li>
+      <li class="nav-item"><a href="/documentSystem/client/view-documents.php" class="nav-link active"><i class="bi bi-file-earmark-check"></i><span>View Documents</span><?php if ($navStats['pending_documents'] > 0): ?><span class="nav-badge"><?php echo $navStats['pending_documents']; ?></span><?php endif; ?></a></li>
+      <li class="nav-item"><a href="/documentSystem/client/view-appointments.php" class="nav-link"><i class="bi bi-calendar-check"></i><span>View Appointments</span><?php if ($navStats['pending_appointments'] > 0): ?><span class="nav-badge"><?php echo $navStats['pending_appointments']; ?></span><?php endif; ?></a></li>
       <li class="nav-item"><a href="/documentSystem/client/new-appointment.php" class="nav-link"><i class="bi bi-calendar-plus"></i><span>New Appointment</span></a></li>
       <li class="nav-item"><a href="/documentSystem/client/request-documents.php" class="nav-link"><i class="bi bi-file-earmark-text"></i><span>Request Document</span></a></li>
       <div class="nav-separator"></div>
