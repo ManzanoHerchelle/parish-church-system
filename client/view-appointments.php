@@ -190,15 +190,10 @@ function getPaymentStatusBadge($status) {
   <link href="/documentSystem/assets/css/common.css" rel="stylesheet">
   <link href="/documentSystem/assets/css/appointments.css" rel="stylesheet">
   <style>
-    /* Fix modal z-index to ensure it appears above backdrop */
-    .modal {
-      z-index: 1060 !important;
-    }
-    .modal-backdrop {
-      z-index: 1050 !important;
-    }
-    .modal-dialog {
-      z-index: 1061 !important;
+    /* Custom modal override */
+    #cancelModal,
+    #rescheduleModal {
+      z-index: 2000 !important;
     }
   </style>
 </head>
