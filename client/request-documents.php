@@ -207,7 +207,7 @@ try {
         <?php if ($activeLogo): ?>
           <img src="/documentSystem/<?php echo htmlspecialchars($activeLogo['file_path']); ?>" 
                alt="<?php echo htmlspecialchars($activeLogo['alt_text'] ?: $activeLogo['name']); ?>" 
-               style="max-width: 45px; max-height: 45px; object-fit: contain;">
+               style="max-width: 120px; max-height: 120px; object-fit: contain; border-radius: 50%;">
         <?php else: ?>
           <div class="logo-circle">PC</div>
         <?php endif; ?>

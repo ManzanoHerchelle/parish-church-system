@@ -112,13 +112,6 @@ unset($_SESSION['registration_error'], $_SESSION['registration_data']);
             </div>
           </div>
           <div class="form-row">
-            <label>Middle Name:</label>
-            <div class="input-group flex-grow-1">
-              <input type="text" name="middle_name" class="form-control" value="<?php echo htmlspecialchars($oldData['middle_name'] ?? ''); ?>">
-              <span class="input-group-text" style="background: transparent; border: none; width: 48px;"></span>
-            </div>
-          </div>
-          <div class="form-row">
             <label>Surname:</label>
             <div class="input-group flex-grow-1">
               <input type="text" name="last_name" class="form-control" value="<?php echo htmlspecialchars($oldData['last_name'] ?? ''); ?>" required>

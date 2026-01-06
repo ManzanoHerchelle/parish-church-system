@@ -43,17 +43,17 @@ $stmt->bind_param("i", $userId);
 $stmt->execute();
 $userResult = $stmt->get_result();
 $userDetails = $userResult->fetch_assoc();
-$emailVerified = (bool)$userDetails['email_verified'];
+$emailVerified = (bool)($userDetails['email_verified'] ?? 0);
 $userPhone = $userDetails['phone'] ?? 'Not provided';
-$userJoinDate = $userDetails['created_at'];
+$userJoinDate = $userDetails['created_at'] ?? date('Y-m-d H:i:s');
 
 // Get upcoming appointments (next 5)
 $appointmentsQuery = "
-    SELECT b.id, b.reference_number, b.booking_date, b.booking_time, b.status, bt.name 
+    SELECT b.id, b.reference_number, b.appointment_date, b.end_time, b.status, bt.name 
     FROM bookings b
     JOIN booking_types bt ON b.booking_type_id = bt.id
-    WHERE b.user_id = ? AND b.booking_date >= CURDATE() 
-    ORDER BY b.booking_date ASC, b.booking_time ASC
+    WHERE b.user_id = ? AND b.appointment_date >= NOW() 
+    ORDER BY b.appointment_date ASC
     LIMIT 5
 ";
 $stmt = $conn->prepare($appointmentsQuery);
@@ -142,7 +142,7 @@ try {
 }
 
 // Count pending appointments
-$countQuery = "SELECT COUNT(*) as count FROM bookings WHERE user_id = ? AND status IN ('pending', 'approved') AND booking_date >= CURDATE()";
+$countQuery = "SELECT COUNT(*) as count FROM bookings WHERE user_id = ? AND status IN ('pending', 'confirmed') AND appointment_date >= NOW()";
 $stmt = $conn->prepare($countQuery);
 $stmt->bind_param("i", $userId);
 $stmt->execute();
@@ -190,7 +190,7 @@ $isOpen = ($currentDay >= 1 && $currentDay <= 6) && ($currentHour >= 9 && $curre
         <?php if ($activeLogo): ?>
           <img src="/documentSystem/<?php echo htmlspecialchars($activeLogo['file_path']); ?>" 
                alt="<?php echo htmlspecialchars($activeLogo['alt_text'] ?: $activeLogo['name']); ?>" 
-               style="max-width: 45px; max-height: 45px; object-fit: contain;">
+               style="max-width: 120px; max-height: 120px; object-fit: contain; border-radius: 50%;">
         <?php else: ?>
           <div class="logo-circle">PC</div>
         <?php endif; ?>
@@ -365,8 +365,8 @@ $isOpen = ($currentDay >= 1 && $currentDay <= 6) && ($currentHour >= 9 && $curre
                     <div class="list-item-content">
                       <div class="list-item-title"><?php echo htmlspecialchars($apt['name']); ?></div>
                       <div class="list-item-meta">
-                        <?php echo date('M d, Y', strtotime($apt['booking_date'])); ?> at 
-                        <?php echo date('g:i A', strtotime($apt['booking_time'])); ?> 
+                        <?php echo date('M d, Y', strtotime($apt['appointment_date'])); ?> at 
+                        <?php echo date('g:i A', strtotime($apt['appointment_date'])); ?> 
                         | <?php echo htmlspecialchars($apt['reference_number']); ?>
                       </div>
                     </div>

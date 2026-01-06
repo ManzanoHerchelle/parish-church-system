@@ -126,10 +126,19 @@ class EmailHandler {
      * Log email to database
      */
     private function logEmail($userId, $email, $subject, $message, $status, $errorMessage) {
-        $stmt = $this->conn->prepare("INSERT INTO email_logs (user_id, email_address, subject, message, status, error_message) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("isssss", $userId, $email, $subject, $message, $status, $errorMessage);
-        $stmt->execute();
-        $stmt->close();
+        try {
+            // Check if table exists first
+            $tableCheck = $this->conn->query("SHOW TABLES LIKE 'email_logs'");
+            if ($tableCheck && $tableCheck->num_rows > 0) {
+                $stmt = $this->conn->prepare("INSERT INTO email_logs (user_id, email_address, subject, message, status, error_message) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("isssss", $userId, $email, $subject, $message, $status, $errorMessage);
+                $stmt->execute();
+                $stmt->close();
+            }
+        } catch (Exception $e) {
+            // Email logs table doesn't exist or error occurred, skip logging
+            error_log("Email log failed: " . $e->getMessage());
+        }
     }
     
     /**

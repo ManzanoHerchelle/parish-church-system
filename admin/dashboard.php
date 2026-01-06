@@ -61,7 +61,7 @@ $countQuery = "SELECT COUNT(*) as count FROM document_requests WHERE status IN (
 $stats['pending_documents'] = $conn->query($countQuery)->fetch_assoc()['count'];
 
 // Pending appointments
-$countQuery = "SELECT COUNT(*) as count FROM bookings WHERE status IN ('pending', 'approved') AND booking_date >= CURDATE()";
+$countQuery = "SELECT COUNT(*) as count FROM bookings WHERE status IN ('pending', 'confirmed') AND appointment_date >= NOW()";
 $stats['pending_appointments'] = $conn->query($countQuery)->fetch_assoc()['count'];
 
 // Ready documents for pickup
@@ -91,7 +91,7 @@ $recentDocs = $conn->query($recentDocsQuery)->fetch_all(MYSQLI_ASSOC);
 // Get recent appointments
 $recentAptQuery = "
     SELECT b.id, b.reference_number, b.status, CONCAT(u.first_name, ' ', u.last_name) as client_name, 
-           bt.name as booking_type, b.booking_date, b.created_at
+           bt.name as booking_type, b.appointment_date, b.created_at
     FROM bookings b
     JOIN users u ON b.user_id = u.id
     JOIN booking_types bt ON b.booking_type_id = bt.id
@@ -220,7 +220,7 @@ function formatHours($hours) {
         <?php if ($activeLogo): ?>
           <img src="/documentSystem/<?php echo htmlspecialchars($activeLogo['file_path']); ?>" 
                alt="<?php echo htmlspecialchars($activeLogo['alt_text'] ?: $activeLogo['name']); ?>" 
-               style="max-width: 45px; max-height: 45px; object-fit: contain;">
+               style="max-width: 120px; max-height: 120px; object-fit: contain; border-radius: 50%;">
         <?php else: ?>
           <div class="logo-circle">PC</div>
         <?php endif; ?>
@@ -550,7 +550,7 @@ function formatHours($hours) {
                     <div class="list-item-title"><?php echo htmlspecialchars($apt['client_name']); ?></div>
                     <div class="list-item-meta">
                       <?php echo htmlspecialchars($apt['booking_type']); ?> | 
-                      <?php echo date('M d, Y g:i A', strtotime($apt['booking_date'] . ' ' . ($apt['booking_time'] ?? ''))); ?>
+                      <?php echo date('M d, Y g:i A', strtotime($apt['appointment_date'])); ?>
                     </div>
                   </div>
                   <span class="list-item-status status-<?php echo $apt['status']; ?>">

@@ -33,14 +33,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'booked_slots') {
     echo json_encode([]);
     exit;
   }
-  $slotQuery = "SELECT booking_time FROM bookings WHERE booking_date = ? AND status IN ('pending', 'approved')";
+  $slotQuery = "SELECT DATE_FORMAT(appointment_date, '%H:%i:%s') as slot_time FROM bookings WHERE DATE(appointment_date) = ? AND status IN ('pending', 'confirmed')";
   $slotStmt = $conn->prepare($slotQuery);
   $slotStmt->bind_param("s", $bookingDate);
   $slotStmt->execute();
   $result = $slotStmt->get_result();
   $slots = [];
   while ($row = $result->fetch_assoc()) {
-    $slots[] = $row['booking_time'];
+    $slots[] = $row['slot_time'];
   }
   $slotStmt->close();
   echo json_encode($slots);
@@ -70,6 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($selectedDate < strtotime('today')) {
             $errorMsg = 'Please select a future date.';
         } else {
+            // Combine date and time into a single appointment datetime
+            $appointmentDateTime = date('Y-m-d H:i:s', strtotime("$bookingDate $bookingTime"));
+            $endDateTime = date('Y-m-d H:i:s', strtotime("$bookingDate $bookingTime +1 hour"));
+
             // Check if date is blocked
             $blockedQuery = "SELECT COUNT(*) as count FROM blocked_dates WHERE DATE(date) = ? AND is_full_day = 1";
             $blockStmt = $conn->prepare($blockedQuery);
@@ -83,11 +87,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Check if time slot is already booked
                 $slotQuery = "SELECT COUNT(*) as count FROM bookings 
-                             WHERE booking_date = ? 
-                             AND booking_time = ? 
-                             AND status IN ('pending', 'approved')";
+                             WHERE appointment_date = ? 
+                             AND status IN ('pending', 'confirmed')";
                 $slotStmt = $conn->prepare($slotQuery);
-                $slotStmt->bind_param("ss", $bookingDate, $bookingTime);
+                $slotStmt->bind_param("s", $appointmentDateTime);
                 $slotStmt->execute();
                 $isSlotBooked = $slotStmt->get_result()->fetch_assoc()['count'] > 0;
                 $slotStmt->close();
@@ -107,15 +110,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $feeStmt->close();
                 
                 // Calculate end time (assume 1 hour duration for now, can be customized per booking type)
-                $endTime = date('H:i:s', strtotime($bookingTime) + 3600);
                 
                 // Insert booking
                 $insertQuery = "INSERT INTO bookings 
-                    (user_id, booking_type_id, reference_number, booking_date, booking_time, end_time, purpose, special_requests, status, payment_status, payment_amount, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, NOW())";
+                  (user_id, booking_type_id, reference_number, appointment_date, end_time, purpose, special_requests, status, payment_status, payment_amount, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, NOW())";
                 
                 $stmt = $conn->prepare($insertQuery);
-                $stmt->bind_param("iissssssd", $userId, $bookingTypeId, $refNumber, $bookingDate, $bookingTime, $endTime, $purpose, $specialRequests, $fee);
+                $stmt->bind_param("iisssssd", $userId, $bookingTypeId, $refNumber, $appointmentDateTime, $endDateTime, $purpose, $specialRequests, $fee);
                 
                 if ($stmt->execute()) {
                     // Get booking type name
@@ -208,7 +210,7 @@ $blockedDatesList = array_map(function($d) { return $d['blocked_date']; }, $bloc
         <?php if ($activeLogo): ?>
           <img src="/documentSystem/<?php echo htmlspecialchars($activeLogo['file_path']); ?>" 
                alt="<?php echo htmlspecialchars($activeLogo['alt_text'] ?: $activeLogo['name']); ?>" 
-               style="max-width: 45px; max-height: 45px; object-fit: contain;">
+               style="max-width: 120px; max-height: 120px; object-fit: contain; border-radius: 50%;">
         <?php else: ?>
           <div class="logo-circle">PC</div>
         <?php endif; ?>

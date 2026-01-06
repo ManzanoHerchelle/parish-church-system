@@ -135,7 +135,7 @@ HTML;
         if ($activeLogo) {
             $logoHTML = '<img src="/documentSystem/' . htmlspecialchars($activeLogo['file_path']) . '" 
                         alt="' . htmlspecialchars($activeLogo['alt_text'] ?: $activeLogo['name']) . '" 
-                        style="max-width: 45px; max-height: 45px; object-fit: contain;">';
+                        style="max-width: 120px; max-height: 120px; object-fit: contain; border-radius: 50%;">';
         } else {
             $logoHTML = '<div class="logo-circle">PC</div>';
         }

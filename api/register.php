@@ -131,16 +131,14 @@ try {
     // Insert user into database
     $stmt = $conn->prepare("
         INSERT INTO users (
-            first_name, middle_name, last_name, email, password, phone, address, 
-            date_of_birth, gender, civil_status, parish_membership, role, status, 
-            email_verified, verification_token
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'client', 'pending', 0, ?)
+            first_name, last_name, email, password, phone, address, 
+            role, status, email_verified, verification_token
+        ) VALUES (?, ?, ?, ?, ?, ?, 'client', 'pending', 0, ?)
     ");
     
     $stmt->bind_param(
-        "ssssssssssss",
-        $firstName, $middleName, $lastName, $email, $hashedPassword, $phone, $address,
-        $dateOfBirth, $gender, $civilStatus, $parishMembership, $verificationToken
+        "sssssss",
+        $firstName, $lastName, $email, $hashedPassword, $phone, $address, $verificationToken
     );
     
     if (!$stmt->execute()) {

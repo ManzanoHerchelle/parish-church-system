@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             
             if ($booking && $booking['status'] === 'approved') {
                 // Check if the new date/time slot is available
-                $checkQuery = "SELECT COUNT(*) as count FROM bookings WHERE booking_date = ? AND booking_time = ? AND status IN ('approved', 'pending')";
+                $checkQuery = "SELECT COUNT(*) as count FROM bookings WHERE appointment_date = ? AND status IN ('confirmed', 'pending')";
                 $checkStmt = $conn->prepare($checkQuery);
                 $checkStmt->bind_param("ss", $newDate, $newTime);
                 $checkStmt->execute();
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $errorMsg = 'This time slot is not available. Please choose another.';
                 } else {
                     // Update the booking with new date and time
-                    $updateQuery = "UPDATE bookings SET booking_date = ?, booking_time = ?, rescheduled_at = NOW(), reschedule_reason = ? WHERE id = ?";
+                    $updateQuery = "UPDATE bookings SET appointment_date = ?, rescheduled_at = NOW(), reschedule_reason = ? WHERE id = ?";
                     $updateStmt = $conn->prepare($updateQuery);
                     $updateStmt->bind_param("sssi", $newDate, $newTime, $rescheduleReason, $appointmentId);
                     
@@ -109,11 +109,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 // Get all bookings for user
 $bookingsQuery = "
-    SELECT b.id, b.reference_number, b.booking_date, b.booking_time, b.status, b.payment_status, b.payment_amount, b.purpose, b.special_requests, b.cancellation_reason, bt.name as booking_type, bt.fee
+    SELECT b.id, b.reference_number, b.appointment_date, b.end_time, b.status, b.payment_status, b.payment_amount, b.purpose, b.special_requests, b.cancellation_reason, bt.name as booking_type, bt.fee
     FROM bookings b
     JOIN booking_types bt ON b.booking_type_id = bt.id
     WHERE b.user_id = ?
-    ORDER BY b.booking_date DESC
+    ORDER BY b.appointment_date DESC
 ";
 
 $stmt = $conn->prepare($bookingsQuery);
@@ -139,11 +139,11 @@ while ($row = $paymentAccountsResult->fetch_assoc()) {
 
 // Separate upcoming and past bookings
 $upcomingBookings = array_filter($bookings, function($b) {
-    return strtotime($b['booking_date']) >= strtotime('today') && $b['status'] !== 'cancelled';
+    return strtotime($b['appointment_date']) >= strtotime('today') && $b['status'] !== 'cancelled';
 });
 
 $pastBookings = array_filter($bookings, function($b) {
-    return strtotime($b['booking_date']) < strtotime('today') || $b['status'] === 'cancelled';
+    return strtotime($b['appointment_date']) < strtotime('today') || $b['status'] === 'cancelled';
 });
 
 // Get user initials
@@ -232,7 +232,7 @@ function getPaymentStatusBadge($status) {
         <?php if ($activeLogo): ?>
           <img src="/documentSystem/<?php echo htmlspecialchars($activeLogo['file_path']); ?>" 
                alt="<?php echo htmlspecialchars($activeLogo['alt_text'] ?: $activeLogo['name']); ?>" 
-               style="max-width: 45px; max-height: 45px; object-fit: contain;">
+               style="max-width: 120px; max-height: 120px; object-fit: contain; border-radius: 50%;">
         <?php else: ?>
           <div class="logo-circle">PC</div>
         <?php endif; ?>
@@ -341,11 +341,11 @@ function getPaymentStatusBadge($status) {
                 <div class="booking-details">
                   <div class="detail-item">
                     <div class="detail-label"><i class="bi bi-calendar2"></i> Date</div>
-                    <div class="detail-value"><?php echo date('F d, Y', strtotime($booking['booking_date'])); ?></div>
+                    <div class="detail-value"><?php echo date('F d, Y', strtotime($booking['appointment_date'])); ?></div>
                   </div>
                   <div class="detail-item">
                     <div class="detail-label"><i class="bi bi-clock"></i> Time</div>
-                    <div class="detail-value"><?php echo date('g:i A', strtotime($booking['booking_time'])); ?></div>
+                    <div class="detail-value"><?php echo date('g:i A', strtotime($booking['appointment_date'])); ?></div>
                   </div>
                   <div class="detail-item">
                     <div class="detail-label"><i class="bi bi-tag"></i> Fee</div>
@@ -413,11 +413,11 @@ function getPaymentStatusBadge($status) {
                 <div class="booking-details">
                   <div class="detail-item">
                     <div class="detail-label"><i class="bi bi-calendar2"></i> Date</div>
-                    <div class="detail-value"><?php echo date('F d, Y', strtotime($booking['booking_date'])); ?></div>
+                    <div class="detail-value"><?php echo date('F d, Y', strtotime($booking['appointment_date'])); ?></div>
                   </div>
                   <div class="detail-item">
                     <div class="detail-label"><i class="bi bi-clock"></i> Time</div>
-                    <div class="detail-value"><?php echo date('g:i A', strtotime($booking['booking_time'])); ?></div>
+                    <div class="detail-value"><?php echo date('g:i A', strtotime($booking['appointment_date'])); ?></div>
                   </div>
                   <div class="detail-item">
                     <div class="detail-label"><i class="bi bi-tag"></i> Fee</div>

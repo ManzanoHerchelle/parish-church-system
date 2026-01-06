@@ -18,7 +18,7 @@ if (isLoggedIn()) {
     $conn = getDBConnection();
     
     // Count pending appointments
-    $countQuery = "SELECT COUNT(*) as count FROM bookings WHERE user_id = ? AND status IN ('pending', 'approved') AND booking_date >= CURDATE()";
+    $countQuery = "SELECT COUNT(*) as count FROM bookings WHERE user_id = ? AND status IN ('pending', 'confirmed') AND appointment_date >= NOW()";
     $stmt = $conn->prepare($countQuery);
     $stmt->bind_param("i", $userId);
     $stmt->execute();

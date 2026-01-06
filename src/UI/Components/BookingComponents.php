@@ -13,8 +13,8 @@ class BookingCard {
     public function render() {
         $status = $this->booking['status'];
         $statusClass = "booking-card-$status";
-        $formattedDate = date('M d, Y', strtotime($this->booking['booking_date']));
-        $formattedTime = date('h:i A', strtotime($this->booking['booking_time']));
+        $formattedDate = date('M d, Y', strtotime($this->booking['appointment_date']));
+        $formattedTime = date('h:i A', strtotime($this->booking['appointment_date']));
         
         return <<<HTML
 <div class="card document-card $statusClass">
@@ -212,8 +212,8 @@ HTML;
         
         $purpose = htmlspecialchars($this->booking['purpose'] ?? '') ?: '<em class="text-muted">None provided</em>';
         $specialRequests = htmlspecialchars($this->booking['special_requests'] ?? '') ?: '<em class="text-muted">None provided</em>';
-        $bookingDate = date('M d, Y', strtotime($this->booking['booking_date']));
-        $bookingTime = date('h:i A', strtotime($this->booking['booking_time']));
+        $bookingDate = date('M d, Y', strtotime($this->booking['appointment_date']));
+        $bookingTime = date('h:i A', strtotime($this->booking['appointment_date']));
         $createdDate = date('M d, Y h:i A', strtotime($this->booking['created_at']));
         
         return <<<HTML
